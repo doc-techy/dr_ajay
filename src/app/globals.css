@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+:root {
+  --primary-beige: #B68C58;
+  --light-beige: #D4B894;
+  --lighter-beige: #E8D5B7;
+  --lightest-beige: #F4EDE4;
+  --dark-beige: #9A7849;
+  --darker-beige: #7D6139;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* Custom animations and effects */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* Grid pattern for backgrounds */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(182, 140, 88, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(182, 140, 88, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--primary-beige), var(--dark-beige));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, var(--dark-beige), var(--darker-beige));
+}
+
+/* Glass effect */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Text gradient animation */
+.text-gradient-animate {
+  background: linear-gradient(-45deg, var(--primary-beige), var(--dark-beige), var(--light-beige), var(--darker-beige));
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* Floating particles effect */
+.particles::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(182, 140, 88, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: float 20s linear infinite;
+}
+
+/* Medical icon styling */
+.medical-icon {
+  filter: drop-shadow(0 4px 8px rgba(182, 140, 88, 0.3));
+  transition: all 0.3s ease;
+}
+
+.medical-icon:hover {
+  filter: drop-shadow(0 8px 16px rgba(182, 140, 88, 0.5));
+  transform: scale(1.1);
+}

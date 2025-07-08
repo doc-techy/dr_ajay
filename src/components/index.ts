@@ -1,0 +1,14 @@
+export { default as Header } from './Header';
+export { default as Footer } from './Footer';
+export { default as Navigation } from './Navigation';
+export { default as HeroSection } from './HeroSection';
+export { default as EducationSection } from './EducationSection';
+export { default as SpecializationsSection } from './SpecializationsSection';
+export { default as ServicesSection } from './ServicesSection';
+export { default as BookSection } from './BookSection';
+export { default as VlogsSection } from './VlogsSection';
+export { default as ContactSection } from './ContactSection';
+export { default as ProfessionalExperience } from './ProfessionalExperience';
+export { default as ProfessionalMemberships } from './ProfessionalMemberships';
+export { default as AcademicContributions } from './AcademicContributions';
+export { default as AdminDashboard } from './AdminDashboard'; 
