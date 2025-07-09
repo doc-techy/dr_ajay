@@ -268,17 +268,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const token = getAccessToken();
     console.log('🔍 AuthContext - Getting headers, token exists:', !!token);
     
+    if (token) {
+      console.log('🎫 Token preview:', token.substring(0, 20) + '...');
+      console.log('🎫 Full token length:', token.length);
+    }
+    
     if (!token) {
       console.error('❌ No access token available in AuthContext');
+      console.error('💾 LocalStorage check:', {
+        hasWindow: typeof window !== 'undefined',
+        storageContent: typeof window !== 'undefined' ? localStorage.getItem('access_token') : 'SSR'
+      });
       return {
         'Content-Type': 'application/json',
       };
     }
     
-    return {
+    const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     };
+    
+    console.log('📤 Headers to be sent:', {
+      hasContentType: !!headers['Content-Type'],
+      authHeaderStart: headers.Authorization?.substring(0, 20) + '...',
+      fullAuthLength: headers.Authorization?.length
+    });
+    
+    return headers;
   };
 
   const value: AuthContextType = {

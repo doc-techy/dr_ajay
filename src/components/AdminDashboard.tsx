@@ -32,17 +32,33 @@ export default function AdminDashboard() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const { user, logout, getAuthHeaders, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, logout, getAuthHeaders, getAccessToken, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
   const fetchAppointments = useCallback(async () => {
     try {
+      // Enhanced debugging
+      console.log('🚀 AdminDashboard - fetchAppointments called');
+      console.log('🔍 Backend URL:', backendUrl);
+      console.log('👤 User state:', user);
+      console.log('🔐 Is authenticated:', isAuthenticated);
+      
+      const token = getAccessToken();
+      console.log('🎫 Raw access token:', token);
+      console.log('🎫 Token length:', token ? token.length : 'null');
+      
       const headers = getAuthHeaders();
       console.log('🚀 Fetching appointments with headers:', headers);
+      console.log('📋 Headers breakdown:', {
+        hasContentType: !!headers['Content-Type'],
+        hasAuthorization: !!headers.Authorization,
+        authHeaderLength: headers.Authorization ? headers.Authorization.length : 'none'
+      });
       
       if (!headers.Authorization) {
         console.error('❌ No Authorization header available');
+        console.error('🚨 This suggests the token is not properly stored or retrieved');
         return;
       }
       
@@ -51,9 +67,12 @@ export default function AdminDashboard() {
       });
       
       console.log('📡 Appointments API Response Status:', response.status);
+      console.log('📡 Response Headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.status === 401) {
-        console.error('❌ Unauthorized - redirecting to login');
+        console.error('❌ Unauthorized - Token might be invalid or expired');
+        const responseText = await response.text();
+        console.error('❌ 401 Response body:', responseText);
         logout();
         router.push('/admin/login');
         return;
@@ -72,7 +91,7 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [backendUrl, logout, router, getAuthHeaders]);
+  }, [backendUrl, logout, router, getAuthHeaders, user, isAuthenticated, getAccessToken]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -206,6 +225,49 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
+        {/* Debug Panel */}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">🔍 Debug Info</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div>
+              <span className="font-medium text-blue-700">Auth Loading:</span>
+              <span className={`ml-1 ${authLoading ? 'text-orange-600' : 'text-green-600'}`}>
+                {authLoading ? 'Yes' : 'No'}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Is Authenticated:</span>
+              <span className={`ml-1 ${isAuthenticated ? 'text-green-600' : 'text-red-600'}`}>
+                {isAuthenticated ? 'Yes' : 'No'}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">User:</span>
+              <span className="ml-1 text-gray-700">
+                {user ? user.username : 'None'}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Token:</span>
+              <span className={`ml-1 ${getAccessToken() ? 'text-green-600' : 'text-red-600'}`}>
+                {getAccessToken() ? 'Present' : 'Missing'}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Backend URL:</span>
+              <span className="ml-1 text-gray-700 break-all">
+                {backendUrl}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-blue-700">Page Loading:</span>
+              <span className={`ml-1 ${loading ? 'text-orange-600' : 'text-green-600'}`}>
+                {loading ? 'Yes' : 'No'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
