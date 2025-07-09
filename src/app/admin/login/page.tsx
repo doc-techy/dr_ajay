@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { navigateAfterAuth, isFullyAuthenticated } from '@/utils/auth';
-import DebugAuthState from '@/components/DebugAuthState';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -230,9 +229,6 @@ export default function AdminLogin() {
           </button>
         </div>
       </div>
-      
-      {/* Debug Component - Remove in production */}
-      <DebugAuthState />
     </div>
   );
 } 
