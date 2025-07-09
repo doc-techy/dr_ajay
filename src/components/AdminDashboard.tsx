@@ -225,48 +225,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Debug Panel */}
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-800 mb-2">🔍 Debug Info</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="font-medium text-blue-700">Auth Loading:</span>
-              <span className={`ml-1 ${authLoading ? 'text-orange-600' : 'text-green-600'}`}>
-                {authLoading ? 'Yes' : 'No'}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-blue-700">Is Authenticated:</span>
-              <span className={`ml-1 ${isAuthenticated ? 'text-green-600' : 'text-red-600'}`}>
-                {isAuthenticated ? 'Yes' : 'No'}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-blue-700">User:</span>
-              <span className="ml-1 text-gray-700">
-                {user ? user.username : 'None'}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-blue-700">Token:</span>
-              <span className={`ml-1 ${getAccessToken() ? 'text-green-600' : 'text-red-600'}`}>
-                {getAccessToken() ? 'Present' : 'Missing'}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-blue-700">Backend URL:</span>
-              <span className="ml-1 text-gray-700 break-all">
-                {backendUrl}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-blue-700">Page Loading:</span>
-              <span className={`ml-1 ${loading ? 'text-orange-600' : 'text-green-600'}`}>
-                {loading ? 'Yes' : 'No'}
-              </span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
