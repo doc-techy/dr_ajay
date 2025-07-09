@@ -203,212 +203,375 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border border-yellow-200';
+      case 'confirmed': return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200';
+      case 'completed': return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200';
+      case 'cancelled': return 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-200';
+      default: return 'bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border border-slate-200';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading appointments...</p>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-transparent bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-spin mx-auto mb-6">
+              <div className="absolute inset-2 bg-white rounded-full"></div>
+            </div>
+            <div className="absolute inset-0 w-20 h-20 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full animate-pulse opacity-75 mx-auto"></div>
+          </div>
+          <h3 className="text-xl font-semibold text-slate-700 mb-2">Loading Dashboard</h3>
+          <p className="text-slate-500">Fetching your appointments...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-
-
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user?.username} • Manage all appointment bookings</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Logged in as</p>
-              <p className="font-medium text-gray-900">{user?.username}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total Appointments</div>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-600">Pending</div>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
-              <div className="text-sm text-gray-600">Confirmed</div>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="text-2xl font-bold text-blue-600">{stats.completed}</div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
-              <div className="text-sm text-gray-600">Cancelled</div>
-            </div>
-          </div>
-        )}
-
-        {/* Appointments Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Appointments</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Patient
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date & Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {appointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{appointment.name}</div>
-                      <div className="text-sm text-gray-500">{appointment.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{appointment.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{appointment.date}</div>
-                      <div className="text-sm text-gray-500">{appointment.time}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <select
-                          value={appointment.status}
-                          onChange={(e) => updateAppointmentStatus(appointment.id, e.target.value)}
-                          className="text-xs border border-gray-300 rounded px-2 py-1"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                        <button
-                          onClick={() => {
-                            setSelectedAppointment(appointment);
-                            setShowModal(true);
-                          }}
-                          className="text-amber-600 hover:text-amber-900"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => deleteAppointment(appointment.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-40 right-20 w-60 h-60 bg-gradient-to-br from-purple-400/10 to-pink-500/10 rounded-full blur-2xl"></div>
+      </div>
+      
+      <div className="relative z-10 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-10">
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/20">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="mb-6 lg:mb-0">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Modal for appointment details */}
-        {showModal && selectedAppointment && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Appointment Details</h3>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
-                  <p className="text-sm text-gray-900">{selectedAppointment.name}</p>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                        Admin Dashboard
+                      </h1>
+                      <p className="text-slate-600 text-lg">Dr. Ajay Krishna Murthy - Practice Management</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-500">
+                    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Welcome back, <span className="font-semibold text-slate-700">{user?.username}</span></span>
+                    <span className="text-slate-400">•</span>
+                    <span className="text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <p className="text-sm text-gray-900">{selectedAppointment.email}</p>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="hidden sm:block text-right bg-slate-50 rounded-xl p-3">
+                    <p className="text-sm text-slate-500">Current Session</p>
+                    <p className="font-semibold text-slate-700">{new Date().toLocaleTimeString()}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="group bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <svg className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Logout</span>
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
-                  <p className="text-sm text-gray-900">{selectedAppointment.phone}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date & Time</label>
-                  <p className="text-sm text-gray-900">{selectedAppointment.date} at {selectedAppointment.time}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Message</label>
-                  <p className="text-sm text-gray-900">{selectedAppointment.message || 'No message provided'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedAppointment.status)}`}>
-                    {selectedAppointment.status}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300"
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
-        )}
+
+          {/* Stats Cards */}
+          {stats && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-slate-800 mb-1">{stats.total}</div>
+                <div className="text-sm font-medium text-slate-600">Total Appointments</div>
+              </div>
+              
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-yellow-600 mb-1">{stats.pending}</div>
+                <div className="text-sm font-medium text-slate-600">Pending</div>
+              </div>
+              
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-green-600 mb-1">{stats.confirmed}</div>
+                <div className="text-sm font-medium text-slate-600">Confirmed</div>
+              </div>
+              
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completed}</div>
+                <div className="text-sm font-medium text-slate-600">Completed</div>
+              </div>
+              
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-red-600 mb-1">{stats.cancelled}</div>
+                <div className="text-sm font-medium text-slate-600">Cancelled</div>
+              </div>
+            </div>
+          )}
+
+          {/* Appointments Table */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Recent Appointments</h2>
+                  <p className="text-slate-600 mt-1">Manage and track patient appointments</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-slate-600">Live Updates</span>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200/50">
+                <thead className="bg-gradient-to-r from-slate-50 to-slate-100/50">
+                  <tr>
+                    <th className="px-8 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Patient Information
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Contact Details
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Appointment Time
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white/50 divide-y divide-slate-200/30">
+                  {appointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-8 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-slate-300 to-slate-400 rounded-2xl flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v1m0 4v1m4-8v1m0 4v1m-4-5h4m-4 5h4" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-semibold text-slate-700 mb-2">No Appointments Found</h3>
+                          <p className="text-slate-500 text-sm">When patients book appointments, they will appear here.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    appointments.map((appointment) => (
+                    <tr key={appointment.id} className="hover:bg-slate-50/50 transition-colors duration-200">
+                      <td className="px-8 py-6 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-4">
+                            {appointment.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">{appointment.name}</div>
+                            <div className="text-sm text-slate-500">{appointment.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="flex items-center text-sm text-slate-700">
+                          <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {appointment.phone}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="text-sm font-medium text-slate-900">{appointment.date}</div>
+                          <div className="mx-2 w-1 h-1 bg-slate-400 rounded-full"></div>
+                          <div className="text-sm text-slate-600">{appointment.time}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>
+                          {appointment.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-3">
+                          <select
+                            value={appointment.status}
+                            onChange={(e) => updateAppointmentStatus(appointment.id, e.target.value)}
+                            className="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          <button
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setShowModal(true);
+                            }}
+                            className="inline-flex items-center px-3 py-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 text-xs font-medium rounded-lg transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View
+                          </button>
+                          <button
+                            onClick={() => deleteAppointment(appointment.id)}
+                            className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium rounded-lg transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+        </div>
+
+          {/* Enhanced Modal for appointment details */}
+          {showModal && selectedAppointment && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl border border-white/20 transform transition-all duration-300">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg">
+                      {selectedAppointment.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800">Appointment Details</h3>
+                      <p className="text-slate-600">Patient Information Overview</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-800 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-slate-50/50 rounded-2xl p-4">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Patient Name</label>
+                      <p className="text-lg font-medium text-slate-900">{selectedAppointment.name}</p>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-2xl p-4">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Email Address</label>
+                      <p className="text-sm text-slate-900 break-all">{selectedAppointment.email}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-slate-50/50 rounded-2xl p-4">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Phone Number</label>
+                      <p className="text-lg font-medium text-slate-900">{selectedAppointment.phone}</p>
+                    </div>
+                    <div className="bg-slate-50/50 rounded-2xl p-4">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Appointment Date & Time</label>
+                      <p className="text-lg font-medium text-slate-900">{selectedAppointment.date}</p>
+                      <p className="text-sm text-slate-600">{selectedAppointment.time}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50/50 rounded-2xl p-4">
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">Patient Message</label>
+                    <p className="text-sm text-slate-900 leading-relaxed">{selectedAppointment.message || 'No message provided'}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between bg-slate-50/50 rounded-2xl p-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Current Status</label>
+                      <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-full ${getStatusColor(selectedAppointment.status)}`}>
+                        {selectedAppointment.status}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Appointment ID</label>
+                      <p className="text-sm font-mono text-slate-900">#{selectedAppointment.id}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex space-x-4">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Close Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Add edit functionality here if needed
+                      setShowModal(false);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Edit Appointment
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
