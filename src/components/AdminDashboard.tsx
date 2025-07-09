@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Appointment {
   id: number;
@@ -30,48 +32,109 @@ export default function AdminDashboard() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  const { user, logout, getAuthHeaders, isAuthenticated, loading: authLoading } = useAuth();
+  const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
   const fetchAppointments = useCallback(async () => {
     try {
-      const response = await fetch(`${backendUrl}/api/appointments/`);
+      const headers = getAuthHeaders();
+      console.log('🚀 Fetching appointments with headers:', headers);
+      
+      if (!headers.Authorization) {
+        console.error('❌ No Authorization header available');
+        return;
+      }
+      
+      const response = await fetch(`${backendUrl}/api/appointments/`, {
+        headers,
+      });
+      
+      console.log('📡 Appointments API Response Status:', response.status);
+      
+      if (response.status === 401) {
+        console.error('❌ Unauthorized - redirecting to login');
+        logout();
+        router.push('/admin/login');
+        return;
+      }
+      
       const data = await response.json();
+      console.log('📋 Appointments data:', data);
+      
       if (data.success) {
         setAppointments(data.appointments);
+      } else {
+        console.error('❌ Appointments fetch failed:', data.error);
       }
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('❌ Error fetching appointments:', error);
     } finally {
       setLoading(false);
     }
-  }, [backendUrl]);
+  }, [backendUrl, logout, router, getAuthHeaders]);
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch(`${backendUrl}/api/appointments/stats/`);
+      const headers = getAuthHeaders();
+      console.log('📊 Fetching stats with headers:', headers);
+      
+      if (!headers.Authorization) {
+        console.error('❌ No Authorization header available');
+        return;
+      }
+      
+      const response = await fetch(`${backendUrl}/api/appointments/stats/`, {
+        headers,
+      });
+      
+      console.log('📡 Stats API Response Status:', response.status);
+      
+      if (response.status === 401) {
+        console.error('❌ Unauthorized - redirecting to login');
+        logout();
+        router.push('/admin/login');
+        return;
+      }
+      
       const data = await response.json();
+      console.log('📊 Stats data:', data);
+      
       if (data.success) {
         setStats(data.stats);
+      } else {
+        console.error('❌ Stats fetch failed:', data.error);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('❌ Error fetching stats:', error);
     }
-  }, [backendUrl]);
+  }, [backendUrl, logout, router, getAuthHeaders]);
 
   useEffect(() => {
-    fetchAppointments();
-    fetchStats();
-  }, [fetchAppointments, fetchStats]);
+    // Only fetch data when auth is ready and user is authenticated
+    if (!authLoading && isAuthenticated) {
+      console.log('✅ Auth ready, fetching admin data...');
+      fetchAppointments();
+      fetchStats();
+    } else if (!authLoading && !isAuthenticated) {
+      console.log('❌ Not authenticated, redirecting...');
+      router.push('/admin/login');
+    }
+  }, [fetchAppointments, fetchStats, authLoading, isAuthenticated, router]);
 
   const updateAppointmentStatus = async (appointmentId: number, status: string) => {
     try {
       const response = await fetch(`${backendUrl}/api/appointments/${appointmentId}/`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
       });
+
+      if (response.status === 401) {
+        logout();
+        router.push('/admin/login');
+        return;
+      }
 
       const data = await response.json();
       if (data.success) {
@@ -92,7 +155,14 @@ export default function AdminDashboard() {
     try {
       const response = await fetch(`${backendUrl}/api/appointments/${appointmentId}/`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
+
+      if (response.status === 401) {
+        logout();
+        router.push('/admin/login');
+        return;
+      }
 
       const data = await response.json();
       if (data.success) {
@@ -105,6 +175,11 @@ export default function AdminDashboard() {
     } catch {
       alert('Error deleting appointment');
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/admin/login');
   };
 
   const getStatusColor = (status: string) => {
@@ -132,9 +207,26 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Dashboard</h1>
-          <p className="text-gray-600">Manage all appointment bookings</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user?.username} • Manage all appointment bookings</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Logged in as</p>
+              <p className="font-medium text-gray-900">{user?.username}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
