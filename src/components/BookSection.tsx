@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { createApiClient } from '@/utils/api';
+import { useRouter } from 'next/navigation';
 
 export default function BookSection() {
   const [formData, setFormData] = useState({
@@ -11,6 +14,18 @@ export default function BookSection() {
     time: '',
     message: ''
   });
+
+  const { getAuthHeaders, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+
+  // Create API client instance
+  const apiClient = useMemo(() => 
+    createApiClient(getAuthHeaders, () => {
+      logout();
+      router.push('/admin/login');
+    }), 
+    [getAuthHeaders, logout, router]
+  );
 
   const timeSlots = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -28,6 +43,12 @@ export default function BookSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check if user is authenticated before allowing appointment booking
+    if (!isAuthenticated) {
+      alert('Please log in to book an appointment.');
+      return;
+    }
+
     // Assemble payload expected by backend
     const payload = {
       name: formData.name,
@@ -38,22 +59,10 @@ export default function BookSection() {
       message: formData.message
     };
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/appointments/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+    const result = await apiClient.post('/api/appointments/', payload);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create appointment');
-      }
-
-      alert('Appointment created successfully! Reference ID: ' + data.appointment_id);
+    if (result.success) {
+      alert('Appointment created successfully! Reference ID: ' + result.data?.appointment_id);
       // Reset form
       setFormData({
         name: '',
@@ -63,9 +72,8 @@ export default function BookSection() {
         time: '',
         message: ''
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-      alert(message);
+    } else {
+      alert(result.error || 'Failed to create appointment');
     }
   };
 
