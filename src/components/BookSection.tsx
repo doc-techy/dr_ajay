@@ -1,10 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { createApiClient } from '@/utils/api';
-import { useRouter } from 'next/navigation';
-import type { CreateAppointmentRequest, CreateAppointmentResponse } from '@/types/api';
+import { useState } from 'react';
+import type { CreateAppointmentRequest } from '@/types/api';
 
 export default function BookSection() {
   const [formData, setFormData] = useState<CreateAppointmentRequest>({
@@ -16,17 +13,7 @@ export default function BookSection() {
     message: ''
   });
 
-  const { getAuthHeaders, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
 
-  // Create API client instance
-  const apiClient = useMemo(() => 
-    createApiClient(getAuthHeaders, () => {
-      logout();
-      router.push('/admin/login');
-    }), 
-    [getAuthHeaders, logout, router]
-  );
 
   const timeSlots = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -44,28 +31,34 @@ export default function BookSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if user is authenticated before allowing appointment booking
-    if (!isAuthenticated) {
-      alert('Please log in to book an appointment.');
-      return;
-    }
-
-    // Form data is already typed as CreateAppointmentRequest
-    const result = await apiClient.post<CreateAppointmentResponse>('/api/appointments/', formData);
-
-    if (result.success) {
-      alert('Appointment created successfully! Reference ID: ' + result.data?.appointment_id);
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        date: '',
-        time: '',
-        message: ''
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/appointments/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-    } else {
-      alert(result.error || 'Failed to create appointment');
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Appointment created successfully! Reference ID: ' + data.appointment_id);
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          date: '',
+          time: '',
+          message: ''
+        });
+      } else {
+        throw new Error(data.error || 'Failed to create appointment');
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+      alert(message);
     }
   };
 
