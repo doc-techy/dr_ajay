@@ -4,9 +4,10 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createApiClient } from '@/utils/api';
 import { useRouter } from 'next/navigation';
+import type { CreateAppointmentRequest, CreateAppointmentResponse } from '@/types/api';
 
 export default function BookSection() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateAppointmentRequest>({
     name: '',
     email: '',
     phone: '',
@@ -49,17 +50,8 @@ export default function BookSection() {
       return;
     }
 
-    // Assemble payload expected by backend
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      date: formData.date,
-      time: formData.time,
-      message: formData.message
-    };
-
-    const result = await apiClient.post('/api/appointments/', payload);
+    // Form data is already typed as CreateAppointmentRequest
+    const result = await apiClient.post<CreateAppointmentResponse>('/api/appointments/', formData);
 
     if (result.success) {
       alert('Appointment created successfully! Reference ID: ' + result.data?.appointment_id);

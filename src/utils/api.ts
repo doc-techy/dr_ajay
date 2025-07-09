@@ -1,5 +1,5 @@
 // API utility for making authenticated requests
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -26,7 +26,7 @@ export class ApiClient {
     this.onUnauthorized = onUnauthorized;
   }
 
-  private async makeRequest<T = any>(
+  private async makeRequest<T = unknown>(
     endpoint: string, 
     options: FetchOptions = {}
   ): Promise<ApiResponse<T>> {
@@ -66,13 +66,13 @@ export class ApiClient {
     }
   }
 
-  async get<T = any>(endpoint: string, requireAuth = true): Promise<ApiResponse<T>> {
+  async get<T = unknown>(endpoint: string, requireAuth = true): Promise<ApiResponse<T>> {
     return this.makeRequest<T>(endpoint, { method: 'GET', requireAuth });
   }
 
-  async post<T = any>(
+  async post<T = unknown>(
     endpoint: string, 
-    data?: any, 
+    data?: unknown, 
     requireAuth = true
   ): Promise<ApiResponse<T>> {
     return this.makeRequest<T>(endpoint, {
@@ -82,9 +82,9 @@ export class ApiClient {
     });
   }
 
-  async put<T = any>(
+  async put<T = unknown>(
     endpoint: string, 
-    data?: any, 
+    data?: unknown, 
     requireAuth = true
   ): Promise<ApiResponse<T>> {
     return this.makeRequest<T>(endpoint, {
@@ -94,7 +94,7 @@ export class ApiClient {
     });
   }
 
-  async delete<T = any>(endpoint: string, requireAuth = true): Promise<ApiResponse<T>> {
+  async delete<T = unknown>(endpoint: string, requireAuth = true): Promise<ApiResponse<T>> {
     return this.makeRequest<T>(endpoint, { method: 'DELETE', requireAuth });
   }
 }
