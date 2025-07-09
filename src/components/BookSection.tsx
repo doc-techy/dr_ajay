@@ -13,6 +13,12 @@ export default function BookSection() {
     message: ''
   });
 
+  // UI state management
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
 
 
   const timeSlots = [
@@ -26,10 +32,22 @@ export default function BookSection() {
       ...prev,
       [name]: value
     }));
+
+    // Reset status when user starts typing again
+    if (submitStatus !== 'idle') {
+      setSubmitStatus('idle');
+      setSuccessMessage('');
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setSuccessMessage('');
+    setErrorMessage('');
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/appointments/`, {
@@ -43,22 +61,29 @@ export default function BookSection() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Appointment created successfully! Reference ID: ' + data.appointment_id);
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          date: '',
-          time: '',
-          message: ''
-        });
+        setSubmitStatus('success');
+        setSuccessMessage(`Appointment created successfully!!!`);
+        
+        // Reset form after a short delay
+        setTimeout(() => {
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            date: '',
+            time: '',
+            message: ''
+          });
+        }, 2000);
       } else {
         throw new Error(data.error || 'Failed to create appointment');
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-      alert(message);
+      setSubmitStatus('error');
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,9 +108,64 @@ export default function BookSection() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Booking Form */}
+          {/* Booking Form or Success Page */}
           <div className="bg-white rounded-3xl p-8 shadow-2xl border border-gray-100">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {submitStatus === 'success' ? (
+              /* Success Page */
+              <div className="text-center py-8">
+                <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-8">
+                  <svg className="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                  Appointment Booked Successfully! 🎉
+                </h3>
+                
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+                  <p className="text-green-800 font-semibold text-lg mb-2">
+                    {successMessage}
+                  </p>
+                  <p className="text-green-700 text-sm">
+                    We have received your appointment request and will contact you shortly to confirm the details.
+                  </p>
+                </div>
+
+
+
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <h5 className="font-semibold text-amber-800 mb-2">What happens next?</h5>
+                    <ul className="text-amber-700 text-sm space-y-1 text-left">
+                      <li>• You will receive a confirmation email with all the details</li>
+                      <li>• Please arrive 15 minutes early for your appointment</li>
+                      <li>• Bring a valid ID and any relevant medical records</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSubmitStatus('idle');
+                      setSuccessMessage('');
+                      setFormData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        date: '',
+                        time: '',
+                        message: ''
+                      });
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
+                  >
+                    Book Another Appointment
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Booking Form */
+              <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -190,11 +270,62 @@ export default function BookSection() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-medium py-4 px-6 rounded-lg transition-all duration-300 hover:shadow-lg"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-medium py-4 px-6 rounded-lg transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Book Appointment
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  'Book Appointment'
+                )}
               </button>
+
+              {/* Loading State */}
+              {/* {isSubmitting && (
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3"></div>
+                    <div>
+                      <h4 className="text-blue-800 font-medium">Creating your appointment...</h4>
+                      <p className="text-blue-600 text-sm">Please wait while we process your request.</p>
+                    </div>
+                  </div>
+                </div>
+              )} */}
+
+              {/* Error State */}
+              {submitStatus === 'error' && (
+                <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-red-800 font-medium">Booking Failed</h4>
+                      <p className="text-red-700 text-sm mt-1">{errorMessage}</p>
+                      <p className="text-red-600 text-sm mt-2">
+                        Please check your information and try again. If the problem persists, contact us directly.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSubmitStatus('idle');
+                          setErrorMessage('');
+                        }}
+                        className="mt-3 inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
+                        )}
           </div>
 
           {/* Contact Information */}

@@ -39,6 +39,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
   // Token management utilities
@@ -73,7 +74,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Refresh access token
   const refreshToken = async (): Promise<boolean> => {
     const refresh = getRefreshToken();
-    if (!refresh) return false;
+    if (!refresh) {
+      setIsAuthenticated(false);
+      return false;
+    }
 
     try {
       const response = await fetch(`${backendUrl}/api/auth/token/refresh/`, {
@@ -87,16 +91,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         setTokens(data.access, refresh);
+        setIsAuthenticated(true);
         return true;
       } else {
         clearTokens();
         setUser(null);
+        setIsAuthenticated(false);
         return false;
       }
     } catch (error) {
       console.error('Token refresh failed:', error);
       clearTokens();
       setUser(null);
+      setIsAuthenticated(false);
       return false;
     }
   };
@@ -105,6 +112,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const verifyAndGetProfile = async () => {
     const token = getAccessToken();
     if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
       setLoading(false);
       return;
     }
@@ -123,10 +132,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Try to refresh token
         const refreshed = await refreshToken();
         if (!refreshed) {
+          setIsAuthenticated(false);
+          setUser(null);
           setLoading(false);
           return;
         }
       }
+
+      // At this point we have a valid token
+      setIsAuthenticated(true);
 
       // Get user profile
       const profileResponse = await fetch(`${backendUrl}/api/auth/profile/`, {
@@ -139,11 +153,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await profileResponse.json();
         setUser(userData);
       } else {
+        // Token is valid but can't get profile - still authenticated but no user data
+        console.warn('Valid token but failed to get user profile');
         clearTokens();
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
       console.error('Auth verification failed:', error);
       clearTokens();
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -178,10 +198,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             is_staff: data.user.is_staff, 
             is_superuser: data.user.is_superuser 
           });
+          setIsAuthenticated(true);
           setUser(data.user);
           console.log('✅ Login complete - user state updated');
           console.log('🔍 Auth State After Login:', {
-            isAuthenticated: !!data.user,
+            isAuthenticated: true,
             isAdmin: data.user?.is_staff || data.user?.is_superuser
           });
           return { success: true };
@@ -202,10 +223,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               is_staff: userData.is_staff, 
               is_superuser: userData.is_superuser 
             });
+            setIsAuthenticated(true);
             setUser(userData);
             console.log('✅ Login complete - user state updated');
             console.log('🔍 Auth State After Login:', {
-              isAuthenticated: !!userData,
+              isAuthenticated: true,
               isAdmin: userData?.is_staff || userData?.is_superuser
             });
             return { success: true };
@@ -246,6 +268,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     clearTokens();
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   // Set up automatic token refresh
@@ -303,7 +326,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     login,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isAdmin: user?.is_staff || user?.is_superuser || false,
     refreshToken,
     getAuthHeaders,

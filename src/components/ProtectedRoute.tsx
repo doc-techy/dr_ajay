@@ -13,7 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAdmin = true 
 }) => {
-  const { loading, isAuthenticated, isAdmin } = useAuth();
+  const { loading, isAuthenticated, isAdmin, user } = useAuth();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
@@ -22,26 +22,48 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       loading, 
       isAuthenticated, 
       isAdmin, 
-      requireAdmin 
+      requireAdmin,
+      hasUser: !!user,
+      userDetails: user ? {
+        id: user.id,
+        username: user.username,
+        is_staff: user.is_staff,
+        is_superuser: user.is_superuser
+      } : null
     });
 
-    if (!loading) {
-      if (!isAuthenticated) {
-        console.log('❌ Not authenticated, redirecting to login');
-        router.push('/admin/login');
-        return;
-      }
+    // Don't make any routing decisions while auth is still loading
+    if (loading) {
+      return;
+    }
 
-      if (requireAdmin && !isAdmin) {
+    // Auth has finished loading, now make routing decisions
+    if (!isAuthenticated) {
+      console.log('❌ Not authenticated, redirecting to login');
+      router.push('/admin/login');
+      return;
+    }
+
+    // User is authenticated
+    if (requireAdmin) {
+      // For admin routes, we need to ensure the user object is loaded
+      // and check their admin status
+      if (user && (user.is_staff || user.is_superuser)) {
+        console.log('✅ Admin access granted, showing content');
+        setIsChecking(false);
+      } else if (user && !user.is_staff && !user.is_superuser) {
         console.log('❌ Not admin, redirecting to home');
         router.push('/');
         return;
       }
-
+      // If user is null but isAuthenticated is true, keep waiting
+      // This handles the brief moment during token verification
+    } else {
+      // For non-admin routes, just being authenticated is enough
       console.log('✅ Access granted, showing content');
       setIsChecking(false);
     }
-  }, [loading, isAuthenticated, isAdmin, requireAdmin, router]);
+  }, [loading, isAuthenticated, isAdmin, requireAdmin, router, user]);
 
   // Show loading spinner while checking authentication
   if (loading || isChecking) {

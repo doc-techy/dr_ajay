@@ -35,9 +35,19 @@ export interface CreateAppointmentResponse {
   message: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+}
+
 export interface GetAppointmentsResponse {
   success: true;
   appointments: Appointment[];
+  pagination?: PaginationMeta;
+  count?: number; // Alternative pagination format
+  results?: Appointment[]; // Alternative data format
 }
 
 export interface GetStatsResponse {
