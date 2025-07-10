@@ -55,14 +55,14 @@ export default function Footer() {
             </div>
 
             {/* Credentials */}
-            <div className="flex flex-wrap gap-3">
+            {/* <div className="flex flex-wrap gap-3">
               <span className="bg-amber-500/20 text-amber-300 px-4 py-2 rounded-full text-sm font-medium border border-amber-500/30">
                 JIPMER Graduate
               </span>
               <span className="bg-purple-500/20 text-purple-300 px-4 py-2 rounded-full text-sm font-medium border border-purple-500/30">
                 L.V. Prasad Fellow
               </span>
-            </div>
+            </div> */}
           </div>
           
           {/* Quick Links */}
@@ -157,7 +157,7 @@ export default function Footer() {
             </div>
             
             {/* Professional Notice */}
-            <div className="text-center lg:text-right">
+            {/* <div className="text-center lg:text-right">
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-6 py-3">
                 <p className="text-amber-300 text-sm font-medium">
                   🏥 Licensed Medical Professional
@@ -166,7 +166,7 @@ export default function Footer() {
                   Practicing in Bangalore, Karnataka
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         
