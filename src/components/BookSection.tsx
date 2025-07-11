@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CreateAppointmentRequest } from '@/types/api';
+
+interface AvailableSlot {
+  start_time: string;
+  end_time: string;
+  slot_time: string;
+  is_available: boolean;
+}
 
 export default function BookSection() {
   const [formData, setFormData] = useState<CreateAppointmentRequest>({
@@ -18,13 +25,131 @@ export default function BookSection() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    date?: string;
+    time?: string;
+  }>({});
 
-
+  // Available slots state
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const timeSlots = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
     '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
   ];
+
+  // Fetch available slots when date changes
+  const fetchAvailableSlots = async (date: string) => {
+    if (!date) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    setLoadingSlots(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`);
+      const data = await response.json();
+      
+      if (data.success && data.available_slots) {
+        // Extract slot times from available slots
+        const slots = data.available_slots
+          .filter((slot: AvailableSlot) => slot.is_available)
+          .map((slot: AvailableSlot) => slot.slot_time);
+        setAvailableSlots(slots);
+      } else {
+        setAvailableSlots([]);
+      }
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // Fetch available slots when date changes
+  useEffect(() => {
+    if (formData.date) {
+      fetchAvailableSlots(formData.date);
+      // Clear the selected time when date changes
+      if (formData.time) {
+        setFormData(prev => ({ ...prev, time: '' }));
+      }
+    }
+  }, [formData.date, formData.time]);
+
+  // Validation functions
+  const validateName = (name: string): string | null => {
+    if (!name.trim()) return 'Full name is required';
+    if (name.trim().length < 2) return 'Name must be at least 2 characters';
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) return 'Name can only contain letters and spaces';
+    return null;
+  };
+
+  const validateEmail = (email: string): string | null => {
+    if (!email.trim()) return 'Email address is required';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) return 'Please enter a valid email address';
+    return null;
+  };
+
+  const validatePhone = (phone: string): string | null => {
+    if (!phone.trim()) return 'Phone number is required';
+    const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,15}$/;
+    if (!phoneRegex.test(phone.trim())) return 'Please enter a valid phone number (10-15 digits)';
+    return null;
+  };
+
+  const validateDate = (date: string): string | null => {
+    if (!date) return 'Appointment date is required';
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) return 'Date cannot be in the past';
+    
+    // Check if it's more than 3 months in the future
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    if (selectedDate > maxDate) return 'Please select a date within the next 3 months';
+    
+    return null;
+  };
+
+  const validateTime = (time: string): string | null => {
+    if (!time) return 'Appointment time is required';
+    const slotsToCheck = availableSlots.length > 0 ? availableSlots : timeSlots;
+    if (!slotsToCheck.includes(time)) return 'Please select a valid time slot';
+    return null;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: typeof validationErrors = {};
+    
+    const nameError = validateName(formData.name);
+    if (nameError) errors.name = nameError;
+    
+    const emailError = validateEmail(formData.email);
+    if (emailError) errors.email = emailError;
+    
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) errors.phone = phoneError;
+    
+    const dateError = validateDate(formData.date);
+    if (dateError) errors.date = dateError;
+    
+    const timeError = validateTime(formData.time);
+    if (timeError) errors.time = timeError;
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,6 +157,14 @@ export default function BookSection() {
       ...prev,
       [name]: value
     }));
+
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name as keyof typeof validationErrors]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
 
     // Reset status when user starts typing again
     if (submitStatus !== 'idle') {
@@ -43,6 +176,11 @@ export default function BookSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
     
     setIsSubmitting(true);
     setSubmitStatus('idle');
@@ -63,6 +201,7 @@ export default function BookSection() {
       if (response.ok) {
         setSubmitStatus('success');
         setSuccessMessage(`Appointment created successfully!!!`);
+        setValidationErrors({}); // Clear any validation errors
         
         // Reset form after a short delay
         setTimeout(() => {
@@ -148,6 +287,7 @@ export default function BookSection() {
                     onClick={() => {
                       setSubmitStatus('idle');
                       setSuccessMessage('');
+                      setValidationErrors({});
                       setFormData({
                         name: '',
                         email: '',
@@ -178,9 +318,21 @@ export default function BookSection() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                      validationErrors.name 
+                        ? 'border-red-300 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="Enter your full name"
                   />
+                  {validationErrors.name && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {validationErrors.name}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -194,9 +346,21 @@ export default function BookSection() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                      validationErrors.phone 
+                        ? 'border-red-300 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="+91 98765 43210"
                   />
+                  {validationErrors.phone && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {validationErrors.phone}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -211,9 +375,21 @@ export default function BookSection() {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                    validationErrors.email 
+                      ? 'border-red-300 focus:ring-red-500' 
+                      : 'border-gray-300 focus:ring-amber-500'
+                  }`}
                   placeholder="your.email@example.com"
                 />
+                {validationErrors.email && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {validationErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -229,8 +405,20 @@ export default function BookSection() {
                     value={formData.date}
                     onChange={handleInputChange}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                      validationErrors.date 
+                        ? 'border-red-300 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                   />
+                  {validationErrors.date && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {validationErrors.date}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -243,13 +431,31 @@ export default function BookSection() {
                     required
                     value={formData.time}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                      validationErrors.time 
+                        ? 'border-red-300 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                   >
                     <option value="">Select time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>{time}</option>
-                    ))}
+                    {loadingSlots ? (
+                      <option value="">Loading slots...</option>
+                    ) : availableSlots.length === 0 ? (
+                      <option value="">No slots available for this date.</option>
+                    ) : (
+                      availableSlots.map((time, index) => (
+                        <option key={index} value={time}>{time}</option>
+                      ))
+                    )}
                   </select>
+                  {validationErrors.time && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {validationErrors.time}
+                    </p>
+                  )}
                 </div>
               </div>
 
