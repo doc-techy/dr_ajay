@@ -11,7 +11,6 @@ interface Vlog {
   videoUrl: string;
   duration: string;
   category: string;
-  views: string;
   uploadDate: string;
   featured?: boolean;
 }
@@ -33,113 +32,103 @@ export default function VlogsSection() {
   const vlogs = [
     {
       id: 1,
-      title: 'Understanding Eyelid Surgery: Complete Guide',
-      description: 'Comprehensive overview of blepharoplasty procedures, benefits, and recovery process.',
-      thumbnail: '/images/Operationtheatre.JPG',
+      title: 'Oculoplasty and Oncology',
+      description: 'Oculoplasty treats eyelid/orbital tumors, like basal cell carcinoma, with tumor removal and reconstruction.',
+      thumbnail: '/thumbnails/video1-thumbnail.jpg',
       videoUrl: '/videos/video1.mp4',
       duration: '12:34',
       category: 'educational',
-      views: '15.2K',
       uploadDate: '2024-01-15',
       featured: true
     },
     {
       id: 2,
-      title: 'Post-Surgery Care Instructions',
-      description: 'Essential guidelines for optimal recovery after oculoplastic surgery.',
-      thumbnail: '/images/image1.jpg',
+      title: 'Puffy Eyelids',
+      description: 'Blepharoplasty reduces puffiness from excess fat/skin.',
+      thumbnail: '/thumbnails/video2-thumbnail.jpg',
       videoUrl: '/videos/video2.mp4',
       duration: '8:45',
       category: 'educational',
-      views: '8.7K',
       uploadDate: '2024-01-10'
     },
     {
       id: 3,
-      title: 'Patient Success Story: Maria\'s Journey',
-      description: 'Real patient testimonial about her transformative eyelid reconstruction experience.',
-      thumbnail: '/images/image2.jpg',
+      title: '20-20-20 Rule',
+      description: 'Eye strain and dry eyes are common. The 20-20-20 rule helps prevent them.',
+      thumbnail: '/thumbnails/video3-thumbnail.jpg',
       videoUrl: '/videos/video3.mp4',
       duration: '6:23',
-      category: 'testimonials',
-      views: '12.1K',
+      category: 'tips',
       uploadDate: '2024-01-08'
     },
     {
       id: 4,
-      title: 'Daily Eye Care Routine for Healthy Eyes',
-      description: 'Simple but effective daily practices to maintain optimal eye health.',
-      thumbnail: '/images/image3.jpg',
+      title: 'Cosmetic vs. Reconstructive Surgery',
+      description: 'Cosmetic blepharoplasty enhances looks; reconstructive fixes function, like ptosis; both need 1-2 weeks recovery.',
+      thumbnail: '/thumbnails/video4-thumbnail.jpg',
       videoUrl: '/videos/video4.mp4',
       duration: '9:12',
-      category: 'tips',
-      views: '20.5K',
+      category: 'procedures',
       uploadDate: '2024-01-05'
     },
     {
       id: 5,
-      title: 'Orbital Surgery: Advanced Techniques',
-      description: 'Detailed explanation of modern orbital surgery methods and innovations.',
-      thumbnail: '/images/image4.jpg',
+      title: 'Watering in Infants/Toddlers',
+      description: 'Watering in infants/toddlers is normal. It can be managed with warm compresses and gentle cleaning.',
+      thumbnail: '/thumbnails/video5-thumbnail.jpg',
       videoUrl: '/videos/video5.mp4',
       duration: '15:18',
-      category: 'procedures',
-      views: '6.8K',
+      category: 'tips',
       uploadDate: '2024-01-02'
     },
     {
       id: 6,
-      title: 'When to See an Oculoplastic Surgeon',
-      description: 'Key signs and symptoms that indicate you should consult a specialist.',
-      thumbnail: '/images/logo.jpeg',
+      title: 'Dark Circles',
+      description: 'Blepharoplasty or fillers reduce dark circles from genetics or thin skin.',
+      thumbnail: '/thumbnails/video6-thumbnail.jpg',
       videoUrl: '/videos/video6.mp4',
       duration: '7:56',
       category: 'educational',
-      views: '11.3K',
       uploadDate: '2023-12-28'
     },
     {
       id: 7,
-      title: 'Tear Duct Surgery Explained',
-      description: 'Complete guide to dacryocystorhinostomy and tear duct reconstruction procedures.',
-      thumbnail: '/images/Operationtheatre.JPG',
+      title: 'Sinusitis',
+      description: 'Sinusitis is inflammation of the paranasal sinuses. It can be treated with antibiotics or surgery.',
+      thumbnail: '/thumbnails/video7-thumbnail.jpg',
       videoUrl: '/videos/video7.mp4',
       duration: '11:45',
       category: 'procedures',
-      views: '9.4K',
       uploadDate: '2023-12-25'
     },
     {
       id: 8,
-      title: 'Preventing Eye Injuries: Safety Tips',
-      description: 'Essential safety measures to protect your eyes in daily activities and workplace.',
-      thumbnail: '/images/image1.jpg',
+      title: 'Eyes Tearing',
+      description: 'Tearing from allergies/ducts may need oculoplastic treatment, not cosmetic surgery.',
+      thumbnail: '/thumbnails/video8-thumbnail.jpg',
       videoUrl: '/videos/video8.mp4',
       duration: '5:32',
-      category: 'tips',
-      views: '18.7K',
+      category: 'educational',
       uploadDate: '2023-12-22'
     },
     {
       id: 9,
-      title: 'Recovery Timeline: What to Expect',
+      title: 'Blepharoplasty Recovery',
       description: 'Detailed timeline of recovery phases after oculoplastic surgery procedures.',
-      thumbnail: '/images/image2.jpg',
+      thumbnail: '/thumbnails/video9-thumbnail.jpg',
       videoUrl: '/videos/video9.mp4',
       duration: '13:28',
-      category: 'educational',
-      views: '14.6K',
+      category: 'procedures',
       uploadDate: '2023-12-20'
     },
     {
       id: 10,
-      title: 'Patient Testimonial: John\'s Transformation',
-      description: 'Inspiring story of a patient\'s journey through orbital reconstruction surgery.',
-      thumbnail: '/images/image3.jpg',
+      title: 'Eyelid Bump',
+      description: 'Chalazia/styes may resolve or need minor surgery, distinct from blepharoplasty.',
+      thumbnail: '/thumbnails/video10-thumbnail.jpg',
       videoUrl: '/videos/video10.mp4',
       duration: '8:17',
       category: 'testimonials',
-      views: '16.9K',
       uploadDate: '2023-12-18'
     }
   ];
@@ -250,8 +239,6 @@ export default function VlogsSection() {
                   <h4 className="text-2xl font-bold text-gray-900 mb-4">{featuredVlog.title}</h4>
                   <p className="text-gray-600 mb-6">{featuredVlog.description}</p>
                   <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
-                    <span>{featuredVlog.views} views</span>
-                    <span>•</span>
                     <span>{new Date(featuredVlog.uploadDate).toLocaleDateString()}</span>
                   </div>
                   <button 
@@ -340,7 +327,6 @@ export default function VlogsSection() {
                 </p>
                 
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{vlog.views} views</span>
                   <span>{new Date(vlog.uploadDate).toLocaleDateString()}</span>
                 </div>
               </div>
@@ -349,31 +335,31 @@ export default function VlogsSection() {
         </div>
       </div>
 
-      {/* Portrait-Optimized Video Modal */}
+      {/* Glassmorphism Video Modal */}
       {isVideoModalOpen && selectedVideo && (
-        <div className={`fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+        <div className={`fixed inset-0 bg-white/20 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 ${
           isVideoModalOpen ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div className={`relative w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-black rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 ${
+          <div className={`relative w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-300 ${
             isVideoModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
           }`}>
             {/* Close Button */}
             <button
               onClick={closeVideoModal}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110 backdrop-blur-sm"
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-800 transition-all duration-200 hover:scale-110 border border-white/20"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            {/* Video Player Container - Optimized for Portrait */}
-            <div className="relative bg-black h-full flex flex-col">
+            {/* Video Player Container - Glassmorphism */}
+            <div className="relative h-full flex flex-col">
               {/* Video Player */}
-              <div className="flex-1 flex items-center justify-center bg-black">
+              <div className="flex-1 flex items-center justify-center bg-black/5 backdrop-blur-sm rounded-t-3xl">
                 <video
                   ref={videoRef}
-                  className="w-full h-full object-contain max-h-[70vh] sm:max-h-[75vh] md:max-h-[80vh]"
+                  className="w-full h-full object-contain max-h-[70vh] sm:max-h-[75vh] md:max-h-[80vh] rounded-xl"
                   controls
                   autoPlay
                   playsInline
@@ -385,26 +371,24 @@ export default function VlogsSection() {
                 </video>
               </div>
 
-              {/* Video Info Panel - Compact for Portrait */}
-              <div className="bg-gradient-to-t from-black via-gray-900 to-transparent p-4 sm:p-6">
-                <div className="text-white">
+              {/* Video Info Panel - Glassmorphism */}
+              <div className="bg-white/10 backdrop-blur-xl border-t border-white/20 p-4 sm:p-6 rounded-b-3xl">
+                <div className="text-gray-800">
                   <h3 className="text-lg sm:text-xl font-bold mb-2 line-clamp-2">{selectedVideo.title}</h3>
-                  <p className="text-gray-300 text-sm mb-3 line-clamp-2">{selectedVideo.description}</p>
-                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-400">
+                  <p className="text-gray-700 text-sm mb-3 line-clamp-2">{selectedVideo.description}</p>
+                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600">
                     <span className="flex items-center gap-1">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      {selectedVideo.views} views
+                      {new Date(selectedVideo.uploadDate).toLocaleDateString()}
                     </span>
                     <span>•</span>
-                    <span>{new Date(selectedVideo.uploadDate).toLocaleDateString()}</span>
-                    <span>•</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedVideo.category === 'educational' ? 'bg-amber-600/20 text-amber-300' :
-                      selectedVideo.category === 'procedures' ? 'bg-purple-600/20 text-purple-300' :
-                      selectedVideo.category === 'testimonials' ? 'bg-green-600/20 text-green-300' :
-                      'bg-orange-600/20 text-orange-300'
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm border border-white/20 ${
+                      selectedVideo.category === 'educational' ? 'bg-amber-100/50 text-amber-700' :
+                      selectedVideo.category === 'procedures' ? 'bg-purple-100/50 text-purple-700' :
+                      selectedVideo.category === 'testimonials' ? 'bg-green-100/50 text-green-700' :
+                      'bg-orange-100/50 text-orange-700'
                     }`}>
                       {categories.find(cat => cat.id === selectedVideo.category)?.name}
                     </span>
@@ -419,7 +403,7 @@ export default function VlogsSection() {
       {/* Overlay backdrop for modal */}
       {isVideoModalOpen && (
         <div 
-          className="fixed inset-0 bg-black/80 z-40"
+          className="fixed inset-0 bg-gradient-to-br from-amber-100/30 to-orange-100/30 backdrop-blur-sm z-40"
           onClick={closeVideoModal}
         />
       )}
