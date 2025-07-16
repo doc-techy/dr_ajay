@@ -108,11 +108,6 @@ export default function SpecializationsSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-4">
         {/* Professional Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-white rounded-full px-6 py-2 mb-6 shadow-sm border border-gray-100">
-            <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
-            <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Specialized Expertise</span>
-            <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
-          </div>
           
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Areas of

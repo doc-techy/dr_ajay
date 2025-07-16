@@ -238,9 +238,9 @@ export default function VlogsSection() {
                   </div>
                   <h4 className="text-2xl font-bold text-gray-900 mb-4">{featuredVlog.title}</h4>
                   <p className="text-gray-600 mb-6">{featuredVlog.description}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
+                  {/* <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
                     <span>{new Date(featuredVlog.uploadDate).toLocaleDateString()}</span>
-                  </div>
+                  </div> */}
                   <button 
                     onClick={() => handleVideoClick(featuredVlog)}
                     className="bg-amber-700 hover:bg-amber-800 text-white font-medium py-3 px-8 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-105"
@@ -326,69 +326,75 @@ export default function VlogsSection() {
                   {vlog.description}
                 </p>
                 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                {/* <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{new Date(vlog.uploadDate).toLocaleDateString()}</span>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Glassmorphism Video Modal */}
+      {/* Responsive Video Modal */}
       {isVideoModalOpen && selectedVideo && (
-        <div className={`fixed inset-0 bg-white/20 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+        <div className={`fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 transition-all duration-300 ${
           isVideoModalOpen ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div className={`relative w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-300 ${
+          <div className={`relative w-full h-full max-w-7xl max-h-[95vh] bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-300 ${
             isVideoModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
           }`}>
             {/* Close Button */}
             <button
               onClick={closeVideoModal}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-800 transition-all duration-200 hover:scale-110 border border-white/20"
+              className="absolute top-3 right-3 md:top-4 md:right-4 z-10 w-8 h-8 md:w-10 md:h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            {/* Video Player Container - Glassmorphism */}
+            {/* Video Player Container */}
             <div className="relative h-full flex flex-col">
-              {/* Video Player */}
-              <div className="flex-1 flex items-center justify-center bg-black/5 backdrop-blur-sm rounded-t-3xl">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-contain max-h-[70vh] sm:max-h-[75vh] md:max-h-[80vh] rounded-xl"
-                  controls
-                  autoPlay
-                  playsInline
-                  preload="metadata"
-                  controlsList="nodownload"
-                >
-                  <source src={selectedVideo.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+              {/* Video Player - Now properly responsive */}
+              <div className="flex-1 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-t-2xl md:rounded-t-3xl p-2 sm:p-4">
+                <div className="relative w-full h-full max-h-[calc(95vh-120px)] sm:max-h-[calc(95vh-140px)] md:max-h-[calc(95vh-160px)]">
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-contain rounded-lg md:rounded-xl"
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    controlsList="nodownload"
+                    style={{
+                      maxHeight: '100%',
+                      maxWidth: '100%'
+                    }}
+                  >
+                    <source src={selectedVideo.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
               </div>
 
-              {/* Video Info Panel - Glassmorphism */}
-              <div className="bg-white/10 backdrop-blur-xl border-t border-white/20 p-4 sm:p-6 rounded-b-3xl">
-                <div className="text-gray-800">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 line-clamp-2">{selectedVideo.title}</h3>
-                  <p className="text-gray-700 text-sm mb-3 line-clamp-2">{selectedVideo.description}</p>
-                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600">
-                    <span className="flex items-center gap-1">
+              {/* Video Info Panel - Compact on mobile */}
+              <div className="bg-white/10 backdrop-blur-xl border-t border-white/20 p-3 sm:p-4 md:p-6 rounded-b-2xl md:rounded-b-3xl flex-shrink-0">
+                <div className="text-white">
+                  <h3 className="text-sm sm:text-lg md:text-xl font-bold mb-1 sm:mb-2 line-clamp-1 sm:line-clamp-2">{selectedVideo.title}</h3>
+                  <p className="text-gray-200 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2">{selectedVideo.description}</p>
+                  <div className="flex items-center flex-wrap gap-1 sm:gap-2 text-xs text-gray-300">
+                    {/* <span className="flex items-center gap-1">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
                       {new Date(selectedVideo.uploadDate).toLocaleDateString()}
-                    </span>
-                    <span>•</span>
+                    </span> */}
+                    <span className="hidden sm:inline">•</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm border border-white/20 ${
-                      selectedVideo.category === 'educational' ? 'bg-amber-100/50 text-amber-700' :
-                      selectedVideo.category === 'procedures' ? 'bg-purple-100/50 text-purple-700' :
-                      selectedVideo.category === 'testimonials' ? 'bg-green-100/50 text-green-700' :
-                      'bg-orange-100/50 text-orange-700'
+                      selectedVideo.category === 'educational' ? 'bg-amber-500/30 text-amber-200' :
+                      selectedVideo.category === 'procedures' ? 'bg-purple-500/30 text-purple-200' :
+                      selectedVideo.category === 'testimonials' ? 'bg-green-500/30 text-green-200' :
+                      'bg-orange-500/30 text-orange-200'
                     }`}>
                       {categories.find(cat => cat.id === selectedVideo.category)?.name}
                     </span>
@@ -400,10 +406,10 @@ export default function VlogsSection() {
         </div>
       )}
 
-      {/* Overlay backdrop for modal */}
+      {/* Click-to-close backdrop */}
       {isVideoModalOpen && (
         <div 
-          className="fixed inset-0 bg-gradient-to-br from-amber-100/30 to-orange-100/30 backdrop-blur-sm z-40"
+          className="fixed inset-0 z-40"
           onClick={closeVideoModal}
         />
       )}
