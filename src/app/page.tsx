@@ -5,7 +5,8 @@ import {
   EducationSection,
   SpecializationsSection,
   BookSection,
-  VlogsSection
+  VlogsSection,
+  Affiliations
 } from '@/components';
 
 export default function Home() {
@@ -24,6 +25,22 @@ export default function Home() {
         
         <section id="specializations">
           <SpecializationsSection />
+        </section>
+        
+        {/* <section id="experience">
+          <ProfessionalExperience />
+        </section>
+        
+        <section id="memberships">
+          <ProfessionalMemberships />
+        </section>
+        
+        <section id="academic">
+          <AcademicContributions />
+        </section> */}
+        
+        <section id="affiliations">
+          <Affiliations />
         </section>
         
         {/* <section id="services">

@@ -10,6 +10,53 @@ interface AvailableSlot {
   is_available: boolean;
 }
 
+// Default time slots - moved outside component to avoid useEffect dependency issues
+const DEFAULT_TIME_SLOTS = [
+  '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+  '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
+];
+
+// Helper function to convert 24-hour format to 12-hour AM/PM format
+const formatTimeToAMPM = (time: string): string => {
+  // If already in AM/PM format, return as is
+  if (time.includes('AM') || time.includes('PM')) {
+    return time;
+  }
+  
+  // If it's just "HH:MM" format
+  if (time.match(/^\d{1,2}:\d{2}$/)) {
+    const [hours, minutes] = time.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
+  }
+  
+  // If it's "HH:MM:SS" format, remove seconds
+  if (time.match(/^\d{1,2}:\d{2}:\d{2}$/)) {
+    const [hours, minutes] = time.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
+  }
+  
+  // If it's ISO time format "YYYY-MM-DDTHH:MM:SS" or similar
+  if (time.includes('T')) {
+    const timePart = time.split('T')[1]?.split(':');
+    if (timePart && timePart.length >= 2) {
+      const hour24 = parseInt(timePart[0], 10);
+      const minutes = timePart[1];
+      const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+      const period = hour24 >= 12 ? 'PM' : 'AM';
+      return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
+    }
+  }
+  
+  // Return original if format not recognized
+  return time;
+};
+
 export default function BookSection() {
   const [formData, setFormData] = useState<CreateAppointmentRequest>({
     name: '',
@@ -35,39 +82,67 @@ export default function BookSection() {
     time?: string;
   }>({});
 
-  // Available slots state
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  // Available slots state - initialize with default time slots
+  const [availableSlots, setAvailableSlots] = useState<string[]>(DEFAULT_TIME_SLOTS);
   const [loadingSlots, setLoadingSlots] = useState(false);
-
-  const timeSlots = [
-    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-  ];
 
   // Fetch available slots when date changes
   const fetchAvailableSlots = async (date: string) => {
     if (!date) {
-      setAvailableSlots([]);
+      setAvailableSlots(DEFAULT_TIME_SLOTS); // Use default time slots when no date
       return;
     }
 
     setLoadingSlots(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`);
-      const data = await response.json();
+      // Use the available-slots endpoint as primary
+      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`);
       
-      if (data.success && data.available_slots) {
-        // Extract slot times from available slots
-        const slots = data.available_slots
-          .filter((slot: AvailableSlot) => slot.is_available)
-          .map((slot: AvailableSlot) => slot.slot_time);
-        setAvailableSlots(slots);
+      // If that fails, try the detailed endpoint (fallback)
+      if (!response.ok) {
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/slots/detailed/?date=${date}`);
+      }
+      
+      const data = await response.json();
+      console.log('📅 Available slots response:', data); // Debug log
+      
+      if (data.success) {
+        let availableSlotTimes: string[] = [];
+        
+        // Handle different response structures
+        if (data.available_slots) {
+          // Structure: { available_slots: [{ slot_time, is_available }] }
+          availableSlotTimes = data.available_slots
+            .filter((slot: AvailableSlot) => slot.is_available)
+            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
+        } else if (data.slots) {
+          // Structure: { slots: [{ slot_time, is_available }] }
+          availableSlotTimes = data.slots
+            .filter((slot: AvailableSlot) => slot.is_available)
+            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
+        } else if (Array.isArray(data.data)) {
+          // Structure: { data: [{ slot_time, is_available }] }
+          availableSlotTimes = data.data
+            .filter((slot: AvailableSlot) => slot.is_available)
+            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
+        }
+        
+        // If no available slots found or empty array, use default time slots
+        if (availableSlotTimes.length === 0) {
+          console.log('⚠️ No available slots returned, using default time slots');
+          setAvailableSlots(DEFAULT_TIME_SLOTS);
+        } else {
+          console.log('✅ Available slots found:', availableSlotTimes);
+          setAvailableSlots(availableSlotTimes);
+        }
       } else {
-        setAvailableSlots([]);
+        console.log('⚠️ API returned success: false, using default time slots');
+        setAvailableSlots(DEFAULT_TIME_SLOTS);
       }
     } catch (error) {
-      console.error('Error fetching available slots:', error);
-      setAvailableSlots([]);
+      console.error('❌ Error fetching available slots, using default time slots:', error);
+      // Fallback to default time slots when API fails
+      setAvailableSlots(DEFAULT_TIME_SLOTS);
     } finally {
       setLoadingSlots(false);
     }
@@ -78,11 +153,12 @@ export default function BookSection() {
     if (formData.date) {
       fetchAvailableSlots(formData.date);
       // Clear the selected time when date changes
-      if (formData.time) {
-        setFormData(prev => ({ ...prev, time: '' }));
-      }
+      setFormData(prev => ({ ...prev, time: '' }));
+    } else {
+      // When no date is selected, show default time slots
+      setAvailableSlots(DEFAULT_TIME_SLOTS);
     }
-  }, [formData.date, formData.time]);
+  }, [formData.date]); // Removed dependencies since DEFAULT_TIME_SLOTS is constant
 
   // Validation functions
   const validateName = (name: string): string | null => {
@@ -124,7 +200,7 @@ export default function BookSection() {
 
   const validateTime = (time: string): string | null => {
     if (!time) return 'Appointment time is required';
-    const slotsToCheck = availableSlots.length > 0 ? availableSlots : timeSlots;
+    const slotsToCheck = availableSlots.length > 0 ? availableSlots : DEFAULT_TIME_SLOTS;
     if (!slotsToCheck.includes(time)) return 'Please select a valid time slot';
     return null;
   };
@@ -431,23 +507,38 @@ export default function BookSection() {
                     required
                     value={formData.time}
                     onChange={handleInputChange}
+                    disabled={loadingSlots || !formData.date}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
                       validationErrors.time 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300 focus:ring-amber-500'
-                    }`}
+                    } ${(loadingSlots || !formData.date) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <option value="">Select time</option>
-                    {loadingSlots ? (
-                      <option value="">Loading slots...</option>
-                    ) : availableSlots.length === 0 ? (
-                      <option value="">No slots available for this date.</option>
-                    ) : (
-                      availableSlots.map((time, index) => (
-                        <option key={index} value={time}>{time}</option>
-                      ))
-                    )}
+                    <option value="">
+                      {!formData.date 
+                        ? 'Please select a date first' 
+                        : loadingSlots 
+                          ? 'Loading available times...' 
+                          : 'Select time'}
+                    </option>
+                    {!loadingSlots && formData.date && availableSlots.map((time, index) => (
+                      <option key={index} value={time}>{time}</option>
+                    ))}
                   </select>
+                  {loadingSlots && formData.date && (
+                    <p className="mt-1 text-sm text-amber-600 flex items-center">
+                      <div className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Checking available time slots...
+                    </p>
+                  )}
+                  {!loadingSlots && formData.date && availableSlots.length === 0 && (
+                    <p className="mt-1 text-sm text-gray-500 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Using default time slots. All times may be available.
+                    </p>
+                  )}
                   {validationErrors.time && (
                     <p className="mt-1 text-sm text-red-600 flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
