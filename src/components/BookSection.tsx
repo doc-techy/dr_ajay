@@ -481,9 +481,6 @@ export default function BookSection() {
                     Preferred Date *
                   </label>
                   <div className="mb-2">
-                    <p className="text-sm text-amber-600 font-medium">
-                      📅 Appointments available from tomorrow onwards
-                    </p>
                   </div>
                   <input
                     type="date"
