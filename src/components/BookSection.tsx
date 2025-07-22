@@ -196,12 +196,7 @@ export default function BookSection() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
     
-    const dayAfterTomorrow = new Date();
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-    dayAfterTomorrow.setHours(0, 0, 0, 0);
-    
-    if (selectedDate < tomorrow) return 'Please select tomorrow for your appointment';
-    if (selectedDate >= dayAfterTomorrow) return 'Please select tomorrow for your appointment';
+    if (selectedDate < tomorrow) return 'Please select a date from tomorrow onwards';
     
     return null;
   };
@@ -487,7 +482,7 @@ export default function BookSection() {
                   </label>
                   <div className="mb-2">
                     <p className="text-sm text-amber-600 font-medium">
-                      📅 Appointments available only for tomorrow
+                      📅 Appointments available from tomorrow onwards
                     </p>
                   </div>
                   <input
@@ -498,7 +493,6 @@ export default function BookSection() {
                     value={formData.date}
                     onChange={handleInputChange}
                     min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                    max={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
                       validationErrors.date 
                         ? 'border-red-300 focus:ring-red-500' 
