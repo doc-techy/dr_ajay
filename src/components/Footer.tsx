@@ -59,11 +59,18 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-gray-900 text-white">
-      {/* Top accent line */}
-      <div className="h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500"></div>
+    <footer className="relative bg-gray-900 text-white">
+      {/* Consistent Fading Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-gradient-to-br from-amber-200/10 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-orange-200/10 to-transparent rounded-full blur-2xl"></div>
+      </div>
       
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Top accent line */}
+      <div className="relative z-10 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500"></div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-1 gap-8 mb-8">
           
           {/* About Section */}

@@ -114,11 +114,13 @@ export default function EducationSection() {
   ];
 
   return (
-    <div className="relative py-12 overflow-hidden">
+    <div className="relative py-12 overflow-hidden scroll-margin-header" id="education">
+      {/* Consistent Fading Background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-amber-50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-transparent rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-yellow-200/10 to-transparent rounded-full blur-3xl"></div>
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4">

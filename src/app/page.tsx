@@ -26,22 +26,6 @@ export default function Home() {
           <SpecializationsSection />
         </section>
         
-        {/* <section id="experience">
-          <ProfessionalExperience />
-        </section>
-        
-        <section id="memberships">
-          <ProfessionalMemberships />
-        </section>
-        
-        <section id="academic">
-          <AcademicContributions />
-        </section> */}
-        
-        {/* <section id="services">
-          <ServicesSection />
-        </section> */}
-        
         <section id="book">
           <BookSection />
         </section>

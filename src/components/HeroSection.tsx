@@ -50,7 +50,15 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-gray-50 via-white to-amber-50/30 overflow-hidden">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden scroll-margin-header" id="about">
+      {/* Consistent Fading Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-yellow-200/10 to-transparent rounded-full blur-3xl"></div>
+      </div>
+
       {/* Professional Background Pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -58,10 +66,6 @@ export default function HeroSection() {
         }}></div>
       </div>
 
-      {/* Floating Elements */}
-      <div className="absolute top-20 right-20 w-64 h-64 bg-amber-200/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-orange-200/10 rounded-full blur-3xl"></div>
-      
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           

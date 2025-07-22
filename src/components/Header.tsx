@@ -4,13 +4,27 @@ export default function Header() {
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const headerHeight = 80; // Approximate header height in pixels
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-amber-50 via-white to-orange-50 border-b border-amber-200 shadow-sm backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+    <header className="sticky top-0 z-50 border-b border-amber-200 shadow-sm backdrop-blur-sm">
+      {/* Consistent Fading Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-gradient-to-br from-amber-200/20 to-transparent rounded-full blur-xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-xl"></div>
+      </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Logo and Name */}
           <div className="flex items-center space-x-3">

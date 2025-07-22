@@ -303,10 +303,14 @@ export default function BookSection() {
   };
 
   return (
-    <section className="relative py-16" id="book">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-white"></div>
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-100/30 to-transparent"></div>
+    <section className="relative py-16 scroll-margin-header" id="book">
+      {/* Consistent Fading Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-yellow-200/10 to-transparent rounded-full blur-3xl"></div>
+      </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4">
         {/* Header */}

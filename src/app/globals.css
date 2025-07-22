@@ -129,3 +129,8 @@ html {
   filter: drop-shadow(0 8px 16px rgba(182, 140, 88, 0.5));
   transform: scale(1.1);
 }
+
+/* Scroll margin for header offset */
+.scroll-margin-header {
+  scroll-margin-top: 80px;
+}
