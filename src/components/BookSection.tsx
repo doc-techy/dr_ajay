@@ -662,7 +662,7 @@ export default function BookSection() {
                     <p className="text-gray-600">ChanRe Veena Rheumatology and Immunology Center,<br />
                     Ground Floor, 531/B, 19th Main Rd, Sector 3,<br />
                     HSR Layout, Bengaluru, Karnataka 560102</p>
-                    <a href="https://maps.app.goo.gl/Q2bA3j8gobp77qVC7" 
+                    <a href="https://maps.app.goo.gl/Ju6YmNsmJ75Pvp4q8" 
                        target="_blank" 
                        rel="noopener noreferrer"
                        className="text-sm text-amber-600 hover:text-amber-700 transition-colors inline-flex items-center gap-1 mt-1">
