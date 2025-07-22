@@ -58,11 +58,18 @@ const formatTimeToAMPM = (time: string): string => {
 };
 
 export default function BookSection() {
+  // Helper function to get tomorrow's date in YYYY-MM-DD format
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState<CreateAppointmentRequest>({
     name: '',
     email: '',
     phone: '',
-    date: '',
+    date: getTomorrowDate(), // Set tomorrow as default
     time: '',
     message: ''
   });
@@ -185,15 +192,16 @@ export default function BookSection() {
   const validateDate = (date: string): string | null => {
     if (!date) return 'Appointment date is required';
     const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
     
-    if (selectedDate < today) return 'Date cannot be in the past';
+    const dayAfterTomorrow = new Date();
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    dayAfterTomorrow.setHours(0, 0, 0, 0);
     
-    // Check if it's more than 3 months in the future
-    const maxDate = new Date();
-    maxDate.setMonth(maxDate.getMonth() + 3);
-    if (selectedDate > maxDate) return 'Please select a date within the next 3 months';
+    if (selectedDate < tomorrow) return 'Please select tomorrow for your appointment';
+    if (selectedDate >= dayAfterTomorrow) return 'Please select tomorrow for your appointment';
     
     return null;
   };
@@ -477,6 +485,11 @@ export default function BookSection() {
                   <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
                     Preferred Date *
                   </label>
+                  <div className="mb-2">
+                    <p className="text-sm text-amber-600 font-medium">
+                      📅 Appointments available only for tomorrow
+                    </p>
+                  </div>
                   <input
                     type="date"
                     id="date"
@@ -484,7 +497,8 @@ export default function BookSection() {
                     required
                     value={formData.date}
                     onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    max={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
                       validationErrors.date 
                         ? 'border-red-300 focus:ring-red-500' 
