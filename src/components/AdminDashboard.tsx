@@ -718,37 +718,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteAppointment = async (appointmentId: number) => {
-    if (!confirm('Are you sure you want to delete this appointment?')) return;
 
-    try {
-      const response = await fetch(`${backendUrl}/api/appointments/${appointmentId}/`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-
-      if (response.status === 401) {
-        logout();
-        router.push('/admin/login');
-        return;
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        // If we're on the last page and it only has 1 item, go to previous page
-        const shouldGoToPreviousPage = currentPage > 1 && appointments.length === 1;
-        const pageToFetch = shouldGoToPreviousPage ? currentPage - 1 : currentPage;
-        
-        fetchAppointments(pageToFetch);
-        fetchStats();
-        showNotification('success', 'Appointment deleted successfully!');
-      } else {
-        showNotification('error', 'Error deleting appointment: ' + data.error);
-      }
-    } catch {
-      showNotification('error', 'Error deleting appointment');
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -1158,10 +1128,23 @@ export default function AdminDashboard() {
                               <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
                                 {appointment.name.charAt(0).toUpperCase()}
                               </div>
-                              <div>
+                              <div className="flex-1">
                                 <div className="text-sm font-semibold text-gray-900">{appointment.name}</div>
                                 <div className="text-xs text-gray-500">{appointment.email}</div>
                               </div>
+                              <button
+                                onClick={() => {
+                                  setSelectedAppointment(appointment);
+                                  setShowModal(true);
+                                }}
+                                className="ml-2 p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors duration-200"
+                                title="View Details"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
@@ -1186,48 +1169,53 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-2">
-                              <div className="relative">
-                                <select
-                                  value={appointment.status}
-                                  onChange={(e) => updateAppointmentStatus(appointment.id, e.target.value)}
+                              {appointment.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                                    disabled={updatingStatus === appointment.id}
+                                    className={`inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                                      updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                  >
+                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                                    disabled={updatingStatus === appointment.id}
+                                    className={`inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                                      updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                  >
+                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Cancel
+                                  </button>
+                                </>
+                              )}
+                              {appointment.status === 'confirmed' && (
+                                <button
+                                  onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
                                   disabled={updatingStatus === appointment.id}
-                                  className={`text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors ${
+                                  className={`inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
                                     updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
                                   }`}
                                 >
-                                  <option value="pending">Pending</option>
-                                  <option value="confirmed">Confirmed</option>
-                                  <option value="completed">Completed</option>
-                                  <option value="cancelled">Cancelled</option>
-                                </select>
-                                {updatingStatus === appointment.id && (
-                                  <div className="absolute inset-y-0 right-2 flex items-center">
-                                    <div className="w-3 h-3 border border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                )}
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setSelectedAppointment(appointment);
-                                  setShowModal(true);
-                                }}
-                                className="inline-flex items-center px-2 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 text-xs font-medium rounded-lg transition-colors duration-200"
-                              >
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                View
-                              </button>
-                              <button
-                                onClick={() => deleteAppointment(appointment.id)}
-                                className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium rounded-lg transition-colors duration-200"
-                              >
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Delete
-                              </button>
+                                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Completed
+                                </button>
+                              )}
+                              {updatingStatus === appointment.id && (
+                                <div className="flex items-center">
+                                  <div className="w-4 h-4 border border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
