@@ -55,9 +55,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         console.log('❌ Not admin, redirecting to home');
         router.push('/');
         return;
+      } else if (!user) {
+        // User is authenticated but user data is not loaded yet
+        // This can happen during the brief moment after login
+        console.log('⏳ User authenticated but user data not loaded yet, waiting...');
+        return;
       }
-      // If user is null but isAuthenticated is true, keep waiting
-      // This handles the brief moment during token verification
     } else {
       // For non-admin routes, just being authenticated is enough
       console.log('✅ Access granted, showing content');
@@ -66,14 +69,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }, [loading, isAuthenticated, isAdmin, requireAdmin, router, user]);
 
   // Show loading spinner while checking authentication
-  if (loading || isChecking) {
+  if (loading || isChecking || (isAuthenticated && requireAdmin && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Verifying access...</p>
+          <p className="text-gray-600 text-lg">
+            {loading ? 'Loading authentication...' : 
+             isAuthenticated && requireAdmin && !user ? 'Loading user data...' : 
+             'Verifying access...'}
+          </p>
           <p className="text-xs text-gray-500 mt-2">
-            Auth Loading: {loading.toString()} | Checking: {isChecking.toString()}
+            Auth Loading: {loading.toString()} | Checking: {isChecking.toString()} | Has User: {!!user}
           </p>
         </div>
       </div>

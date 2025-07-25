@@ -727,11 +727,11 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-      case 'confirmed': return 'bg-green-100 text-green-800 border border-green-200';
-      case 'completed': return 'bg-blue-100 text-blue-800 border border-blue-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'pending': return 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg';
+      case 'confirmed': return 'bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg';
+      case 'completed': return 'bg-gradient-to-r from-blue-400 to-blue-500 text-white shadow-lg';
+      case 'cancelled': return 'bg-gradient-to-r from-red-400 to-red-500 text-white shadow-lg';
+      default: return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg';
     }
   };
 
@@ -751,13 +751,19 @@ export default function AdminDashboard() {
         </div>
         
         <div className="relative text-center">
-          <div className="mx-auto h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-lg mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="mx-auto h-24 w-24 bg-white rounded-full flex items-center justify-center shadow-2xl mb-8 transform animate-pulse">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center relative">
+              <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-20 h-20 border-2 border-transparent border-r-amber-300 rounded-full animate-ping"></div>
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">Loading Dashboard</h3>
-          <p className="text-gray-300">Fetching your appointments...</p>
+          <h3 className="text-3xl font-bold text-white mb-3 animate-pulse">Loading Dashboard</h3>
+          <p className="text-gray-300 text-lg">Fetching your appointments...</p>
+          <div className="mt-6 flex justify-center space-x-2">
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -1163,8 +1169,9 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>
-                              {appointment.status}
+                            <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full ${getStatusColor(appointment.status)} transform hover:scale-105 transition-all duration-200`}>
+                              <div className="w-2 h-2 rounded-full bg-white mr-2 opacity-80"></div>
+                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
@@ -1174,11 +1181,11 @@ export default function AdminDashboard() {
                                   <button
                                     onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
                                     disabled={updatingStatus === appointment.id}
-                                    className={`inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                                    className={`inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                                       updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
                                   >
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                     Confirm
@@ -1186,11 +1193,11 @@ export default function AdminDashboard() {
                                   <button
                                     onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
                                     disabled={updatingStatus === appointment.id}
-                                    className={`inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                                    className={`inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white text-xs font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                                       updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
                                   >
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     Cancel
@@ -1201,19 +1208,22 @@ export default function AdminDashboard() {
                                 <button
                                   onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
                                   disabled={updatingStatus === appointment.id}
-                                  className={`inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                                  className={`inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                                     updatingStatus === appointment.id ? 'opacity-50 cursor-not-allowed' : ''
                                   }`}
                                 >
-                                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
-                                  Completed
+                                  Complete
                                 </button>
                               )}
                               {updatingStatus === appointment.id && (
                                 <div className="flex items-center">
-                                  <div className="w-4 h-4 border border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                  <div className="relative">
+                                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="absolute inset-0 w-5 h-5 border-2 border-transparent border-r-amber-400 rounded-full animate-ping"></div>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -1486,8 +1496,16 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   {loadingAvailability ? (
                     <div className="p-8 text-center">
-                      <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading availabilities...</p>
+                      <div className="relative mx-auto mb-4">
+                        <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 w-10 h-10 border-2 border-transparent border-r-amber-400 rounded-full animate-ping"></div>
+                      </div>
+                      <p className="text-gray-600 font-medium">Loading availabilities...</p>
+                      <div className="mt-4 flex justify-center space-x-1">
+                        <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
                     </div>
                   ) : availabilities.length === 0 ? (
                     <div className="p-8 text-center">
@@ -1754,8 +1772,16 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   {loadingBlockedSlots ? (
                     <div className="p-8 text-center">
-                      <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading blocked slots...</p>
+                      <div className="relative mx-auto mb-4">
+                        <div className="w-10 h-10 border-3 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 w-10 h-10 border-2 border-transparent border-r-red-400 rounded-full animate-ping"></div>
+                      </div>
+                      <p className="text-gray-600 font-medium">Loading blocked slots...</p>
+                      <div className="mt-4 flex justify-center space-x-1">
+                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
                     </div>
                   ) : blockedSlots.length === 0 ? (
                     <div className="p-8 text-center">
@@ -1912,8 +1938,16 @@ export default function AdminDashboard() {
 
                 {loadingAvailability ? (
                   <div className="text-center py-8">
-                    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading available slots...</p>
+                    <div className="relative mx-auto mb-4">
+                      <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="absolute inset-0 w-10 h-10 border-2 border-transparent border-r-amber-400 rounded-full animate-ping"></div>
+                    </div>
+                    <p className="text-gray-600 font-medium">Loading available slots...</p>
+                    <div className="mt-4 flex justify-center space-x-1">
+                      <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
                   </div>
                 ) : availableSlots.length === 0 ? (
                   <div className="text-center py-8">
@@ -2004,9 +2038,10 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-600 mb-2">Current Status</label>
-                      <span className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-full ${getStatusColor(selectedAppointment.status)}`}>
-                    {selectedAppointment.status}
-                  </span>
+                      <span className={`inline-flex items-center px-4 py-2 text-sm font-bold rounded-full ${getStatusColor(selectedAppointment.status)} transform hover:scale-105 transition-all duration-200`}>
+                        <div className="w-2 h-2 rounded-full bg-white mr-2 opacity-80"></div>
+                        {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
+                      </span>
                 </div>
                     <div className="text-right">
                       <label className="block text-sm font-semibold text-gray-600 mb-2">Appointment ID</label>
