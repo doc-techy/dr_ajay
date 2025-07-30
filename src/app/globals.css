@@ -134,3 +134,32 @@ html {
 .scroll-margin-header {
   scroll-margin-top: 80px;
 }
+
+/* Date picker styling */
+input[type="date"] {
+  color-scheme: light;
+}
+
+/* Make today's date appear greyish in the date picker */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+}
+
+/* Custom styling for date picker to show today's date as greyish */
+.date-picker-custom {
+  position: relative;
+}
+
+.date-picker-custom input[type="date"] {
+  position: relative;
+}
+
+/* Override browser default styling for today's date */
+input[type="date"]::-webkit-datetime-edit {
+  color: #374151;
+}
+
+/* Style for when today's date is selected */
+input[type="date"]:focus::-webkit-datetime-edit {
+  color: #9CA3AF;
+}

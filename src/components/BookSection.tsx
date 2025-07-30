@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { CreateAppointmentRequest } from '@/types/api';
 
 interface AvailableSlot {
@@ -62,7 +62,11 @@ export default function BookSection() {
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    // Use local timezone to avoid UTC issues
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const [formData, setFormData] = useState<CreateAppointmentRequest>({
@@ -73,6 +77,8 @@ export default function BookSection() {
     time: '',
     message: ''
   });
+
+
 
   // UI state management
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,6 +98,9 @@ export default function BookSection() {
   // Available slots state - initialize with default time slots
   const [availableSlots, setAvailableSlots] = useState<string[]>(DEFAULT_TIME_SLOTS);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  
+  // Ref to track if default date has been set
+  const defaultDateSet = useRef(false);
 
   // Fetch available slots when date changes
   const fetchAvailableSlots = async (date: string) => {
@@ -165,7 +174,16 @@ export default function BookSection() {
       // When no date is selected, show default time slots
       setAvailableSlots(DEFAULT_TIME_SLOTS);
     }
-  }, [formData.date]); // Removed dependencies since DEFAULT_TIME_SLOTS is constant
+  }, [formData.date]);
+
+  // Ensure tomorrow's date is set as default on component mount
+  useEffect(() => {
+    if (!defaultDateSet.current) {
+      const tomorrow = getTomorrowDate();
+      setFormData(prev => ({ ...prev, date: tomorrow }));
+      defaultDateSet.current = true;
+    }
+  }, []); // Empty dependency array means this runs only once on mount
 
   // Validation functions
   const validateName = (name: string): string | null => {
@@ -288,7 +306,7 @@ export default function BookSection() {
             name: '',
             email: '',
             phone: '',
-            date: '',
+            date: getTomorrowDate(), // Reset to tomorrow
             time: '',
             message: ''
           });
@@ -307,6 +325,7 @@ export default function BookSection() {
 
   return (
     <section className="relative py-16 scroll-margin-header" id="book">
+
       {/* Consistent Fading Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
@@ -375,7 +394,7 @@ export default function BookSection() {
                         name: '',
                         email: '',
                         phone: '',
-                        date: '',
+                        date: getTomorrowDate(), // Reset to tomorrow
                         time: '',
                         message: ''
                       });
@@ -482,20 +501,22 @@ export default function BookSection() {
                   </label>
                   <div className="mb-2">
                   </div>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    required
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
-                      validationErrors.date 
-                        ? 'border-red-300 focus:ring-red-500' 
-                        : 'border-gray-300 focus:ring-amber-500'
-                    }`}
-                  />
+                  <div className="date-picker-custom">
+                    <input
+                      type="date"
+                      id="date"
+                      name="date"
+                      required
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      min={getTomorrowDate()}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
+                        validationErrors.date 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-amber-500'
+                      }`}
+                    />
+                  </div>
                   {validationErrors.date && (
                     <p className="mt-1 text-sm text-red-600 flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -589,18 +610,6 @@ export default function BookSection() {
                 )}
               </button>
 
-              {/* Loading State */}
-              {/* {isSubmitting && (
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3"></div>
-                    <div>
-                      <h4 className="text-blue-800 font-medium">Creating your appointment...</h4>
-                      <p className="text-blue-600 text-sm">Please wait while we process your request.</p>
-                    </div>
-                  </div>
-                </div>
-              )} */}
 
               {/* Error State */}
               {submitStatus === 'error' && (
