@@ -85,6 +85,7 @@ export default function BookSection() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [formResetKey, setFormResetKey] = useState(0); // Track form resets
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<{
@@ -101,6 +102,33 @@ export default function BookSection() {
   
   // Ref to track if default date has been set
   const defaultDateSet = useRef(false);
+  
+  // Ref to track the current fetch request to prevent race conditions
+  const currentFetchRef = useRef<AbortController | null>(null);
+  
+  // Function to reset form and fetch available slots
+  const resetFormAndFetchSlots = () => {
+    const tomorrow = getTomorrowDate();
+    
+    // Cancel any ongoing fetch request
+    if (currentFetchRef.current) {
+      currentFetchRef.current.abort();
+    }
+    
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      date: tomorrow,
+      time: '',
+      message: ''
+    });
+    // Reset available slots to default while new slots are being fetched
+    setAvailableSlots(DEFAULT_TIME_SLOTS);
+    setLoadingSlots(false);
+    // Increment reset key to force useEffect to trigger
+    setFormResetKey(prev => prev + 1);
+  };
 
   // Fetch available slots when date changes
   const fetchAvailableSlots = async (date: string) => {
@@ -109,14 +137,32 @@ export default function BookSection() {
       return;
     }
 
+    // Cancel any ongoing fetch request
+    if (currentFetchRef.current) {
+      currentFetchRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    currentFetchRef.current = abortController;
+
     setLoadingSlots(true);
+    
+    // Add minimum loading time to prevent flickering
+    const startTime = Date.now();
+    const minLoadingTime = 500; // 500ms minimum loading time
+
     try {
       // Use the available-slots endpoint as primary
-      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`);
+      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`, {
+        signal: abortController.signal
+      });
       
       // If that fails, try the detailed endpoint (fallback)
       if (!response.ok) {
-        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/slots/detailed/?date=${date}`);
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/slots/detailed/?date=${date}`, {
+          signal: abortController.signal
+        });
       }
       
       const data = await response.json();
@@ -156,25 +202,43 @@ export default function BookSection() {
         setAvailableSlots(DEFAULT_TIME_SLOTS);
       }
     } catch (error) {
-      console.error('❌ Error fetching available slots, using default time slots:', error);
+      // Don't log error if request was aborted
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('❌ Error fetching available slots, using default time slots:', error);
+      }
       // Fallback to default time slots when API fails
       setAvailableSlots(DEFAULT_TIME_SLOTS);
     } finally {
-      setLoadingSlots(false);
+      // Ensure minimum loading time
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        setLoadingSlots(false);
+        currentFetchRef.current = null;
+      }, remainingTime);
     }
   };
 
-  // Fetch available slots when date changes
+  // Fetch available slots when date changes with debouncing
   useEffect(() => {
     if (formData.date) {
-      fetchAvailableSlots(formData.date);
       // Clear the selected time when date changes
       setFormData(prev => ({ ...prev, time: '' }));
+      
+      // Debounce the API call to prevent rapid requests
+      const timeoutId = setTimeout(() => {
+        fetchAvailableSlots(formData.date);
+      }, 300); // 300ms debounce delay
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
     } else {
       // When no date is selected, show default time slots
       setAvailableSlots(DEFAULT_TIME_SLOTS);
     }
-  }, [formData.date]);
+  }, [formData.date, formResetKey]);
 
   // Ensure tomorrow's date is set as default on component mount
   useEffect(() => {
@@ -183,6 +247,13 @@ export default function BookSection() {
       setFormData(prev => ({ ...prev, date: tomorrow }));
       defaultDateSet.current = true;
     }
+    
+    // Cleanup function to abort any ongoing requests when component unmounts
+    return () => {
+      if (currentFetchRef.current) {
+        currentFetchRef.current.abort();
+      }
+    };
   }, []); // Empty dependency array means this runs only once on mount
 
   // Validation functions
@@ -302,14 +373,7 @@ export default function BookSection() {
         
         // Reset form after a short delay
         setTimeout(() => {
-          setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            date: getTomorrowDate(), // Reset to tomorrow
-            time: '',
-            message: ''
-          });
+          resetFormAndFetchSlots();
         }, 2000);
       } else {
         throw new Error(data.error || 'Failed to create appointment');
@@ -390,14 +454,7 @@ export default function BookSection() {
                       setSubmitStatus('idle');
                       setSuccessMessage('');
                       setValidationErrors({});
-                      setFormData({
-                        name: '',
-                        email: '',
-                        phone: '',
-                        date: getTomorrowDate(), // Reset to tomorrow
-                        time: '',
-                        message: ''
-                      });
+                      resetFormAndFetchSlots();
                     }}
                     className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
                   >
@@ -552,7 +609,7 @@ export default function BookSection() {
                           : 'Select time'}
                     </option>
                     {!loadingSlots && formData.date && availableSlots.map((time, index) => (
-                      <option key={index} value={time}>{time}</option>
+                      <option key={`${time}-${index}`} value={time}>{time}</option>
                     ))}
                   </select>
                   {loadingSlots && formData.date && (
