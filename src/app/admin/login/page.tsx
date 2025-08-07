@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -18,12 +20,12 @@ export default function AdminLoginPage() {
           Admin login has been temporarily disabled for security reasons.
         </p>
         
-        <a 
+        <Link 
           href="/"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
         >
           Return to Home
-        </a>
+        </Link>
       </div>
     </div>
   );
