@@ -6,7 +6,7 @@ export default function EducationSection() {
       degree: "Fellowship in Oculoplasty",
       institution: "L.V. Prasad Eye Institute",
       location: "Hyderabad, India",
-      year: "2019",
+      year: "2016",
       description: "Advanced subspecialty training in Oculoplastic and Reconstructive Surgery",
       icon: "🏆",
       highlight: "Fellowship"
@@ -15,7 +15,7 @@ export default function EducationSection() {
       degree: "MS Ophthalmology",
       institution: "Jawaharlal Institute of Postgraduate Medical Education and Research (JIPMER)",
       location: "Puducherry, India", 
-      year: "2017",
+      year: "2012",
       description: "Master of Surgery in Ophthalmology with academic excellence",
       icon: "👁️",
       highlight: "Postgraduate"
@@ -24,7 +24,7 @@ export default function EducationSection() {
       degree: "MBBS",
       institution: "A.J Hospital and Research Centre",
       location: "Mangalore, India",
-      year: "2014",
+      year: "2004",
       description: "Bachelor of Medicine and Bachelor of Surgery with distinction",
       icon: "🎓",
       highlight: "Undergraduate"
