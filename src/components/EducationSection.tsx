@@ -104,8 +104,8 @@ export default function EducationSection() {
     },
     {
       acronym: "ISOO",
-      fullName: "Indian Society of Ocular Oncology",
-      description: "Specialized society focusing on ocular oncology research and cutting-edge treatments",
+      fullName: "International Society of Ocular Oncology",
+      description: "The International Society of Ocular Oncology (ISOO) is a global organization dedicated to advancing the understanding and treatment of ocular tumors and cancers.",
       icon: "🔬",
       highlight: "Active Member",
       gradient: "from-purple-500 to-violet-500",
