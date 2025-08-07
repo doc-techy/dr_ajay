@@ -480,7 +480,7 @@ export default function BookSection() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-amber-600 to-amber-700 rounded-3xl p-8 text-white">
+            {/* <div className="bg-gradient-to-r from-amber-600 to-amber-700 rounded-3xl p-8 text-white">
               <h3 className="text-xl font-bold mb-4">Specializations</h3>
               <ul className="space-y-2 text-amber-100">
                 <li>• Eyelid Surgery (Blepharoplasty)</li>
@@ -488,7 +488,7 @@ export default function BookSection() {
                 <li>• Aesthetic Eye Procedures</li>
                 <li>• Comprehensive Eye Care</li>
               </ul>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
