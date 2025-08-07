@@ -79,12 +79,12 @@ export default function Header() {
               </button>
             </nav>
 
-            {/* Book Now Button */}
+            {/* Contact Us Button */}
             <button 
               onClick={() => scrollToSection('#book')}
               className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg transform hover:scale-105"
             >
-              Book Now
+              Contact Us
             </button>
           </div>
         </div>

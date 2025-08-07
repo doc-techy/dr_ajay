@@ -3,59 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CreateAppointmentRequest } from '@/types/api';
 
-interface AvailableSlot {
-  start_time: string;
-  end_time: string;
-  slot_time: string;
-  is_available: boolean;
-}
 
-// Default time slots - moved outside component to avoid useEffect dependency issues
-const DEFAULT_TIME_SLOTS = [
-  '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-];
-
-// Helper function to convert 24-hour format to 12-hour AM/PM format
-const formatTimeToAMPM = (time: string): string => {
-  // If already in AM/PM format, return as is
-  if (time.includes('AM') || time.includes('PM')) {
-    return time;
-  }
-  
-  // If it's just "HH:MM" format
-  if (time.match(/^\d{1,2}:\d{2}$/)) {
-    const [hours, minutes] = time.split(':');
-    const hour24 = parseInt(hours, 10);
-    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-    const period = hour24 >= 12 ? 'PM' : 'AM';
-    return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
-  }
-  
-  // If it's "HH:MM:SS" format, remove seconds
-  if (time.match(/^\d{1,2}:\d{2}:\d{2}$/)) {
-    const [hours, minutes] = time.split(':');
-    const hour24 = parseInt(hours, 10);
-    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-    const period = hour24 >= 12 ? 'PM' : 'AM';
-    return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
-  }
-  
-  // If it's ISO time format "YYYY-MM-DDTHH:MM:SS" or similar
-  if (time.includes('T')) {
-    const timePart = time.split('T')[1]?.split(':');
-    if (timePart && timePart.length >= 2) {
-      const hour24 = parseInt(timePart[0], 10);
-      const minutes = timePart[1];
-      const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-      const period = hour24 >= 12 ? 'PM' : 'AM';
-      return `${hour12.toString().padStart(2, '0')}:${minutes} ${period}`;
-    }
-  }
-  
-  // Return original if format not recognized
-  return time;
-};
 
 export default function BookSection() {
   // Helper function to get tomorrow's date in YYYY-MM-DD format
@@ -74,7 +22,7 @@ export default function BookSection() {
     email: '',
     phone: '',
     date: getTomorrowDate(), // Set tomorrow as default
-    time: '',
+    time: '10:00 AM', // Set default time
     message: ''
   });
 
@@ -85,175 +33,45 @@ export default function BookSection() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [formResetKey, setFormResetKey] = useState(0); // Track form resets
+
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<{
     name?: string;
     email?: string;
     phone?: string;
-    date?: string;
-    time?: string;
   }>({});
 
-  // Available slots state - initialize with default time slots
-  const [availableSlots, setAvailableSlots] = useState<string[]>(DEFAULT_TIME_SLOTS);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  
   // Ref to track if default date has been set
   const defaultDateSet = useRef(false);
   
-  // Ref to track the current fetch request to prevent race conditions
-  const currentFetchRef = useRef<AbortController | null>(null);
-  
-  // Function to reset form and fetch available slots
-  const resetFormAndFetchSlots = () => {
+  // Function to reset form
+  const resetForm = () => {
     const tomorrow = getTomorrowDate();
-    
-    // Cancel any ongoing fetch request
-    if (currentFetchRef.current) {
-      currentFetchRef.current.abort();
-    }
     
     setFormData({
       name: '',
       email: '',
       phone: '',
       date: tomorrow,
-      time: '',
+      time: '10:00 AM', // Set default time
       message: ''
     });
-    // Reset available slots to default while new slots are being fetched
-    setAvailableSlots(DEFAULT_TIME_SLOTS);
-    setLoadingSlots(false);
-    // Increment reset key to force useEffect to trigger
-    setFormResetKey(prev => prev + 1);
   };
 
-  // Fetch available slots when date changes
-  const fetchAvailableSlots = async (date: string) => {
-    if (!date) {
-      setAvailableSlots(DEFAULT_TIME_SLOTS); // Use default time slots when no date
-      return;
-    }
 
-    // Cancel any ongoing fetch request
-    if (currentFetchRef.current) {
-      currentFetchRef.current.abort();
-    }
 
-    // Create new abort controller for this request
-    const abortController = new AbortController();
-    currentFetchRef.current = abortController;
-
-    setLoadingSlots(true);
-    
-    // Add minimum loading time to prevent flickering
-    const startTime = Date.now();
-    const minLoadingTime = 500; // 500ms minimum loading time
-
-    try {
-      // Use the available-slots endpoint as primary
-      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/available-slots/?date=${date}`, {
-        signal: abortController.signal
-      });
-      
-      // If that fails, try the detailed endpoint (fallback)
-      if (!response.ok) {
-        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/slots/detailed/?date=${date}`, {
-          signal: abortController.signal
-        });
-      }
-      
-      const data = await response.json();
-      console.log('📅 Available slots response:', data); // Debug log
-      
-      if (data.success) {
-        let availableSlotTimes: string[] = [];
-        
-        // Handle different response structures
-        if (data.available_slots) {
-          // Structure: { available_slots: [{ slot_time, is_available }] }
-          availableSlotTimes = data.available_slots
-            .filter((slot: AvailableSlot) => slot.is_available)
-            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
-        } else if (data.slots) {
-          // Structure: { slots: [{ slot_time, is_available }] }
-          availableSlotTimes = data.slots
-            .filter((slot: AvailableSlot) => slot.is_available)
-            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
-        } else if (Array.isArray(data.data)) {
-          // Structure: { data: [{ slot_time, is_available }] }
-          availableSlotTimes = data.data
-            .filter((slot: AvailableSlot) => slot.is_available)
-            .map((slot: AvailableSlot) => formatTimeToAMPM(slot.slot_time));
-        }
-        
-        // If no available slots found or empty array, use default time slots
-        if (availableSlotTimes.length === 0) {
-          console.log('⚠️ No available slots returned, using default time slots');
-          setAvailableSlots(DEFAULT_TIME_SLOTS);
-        } else {
-          console.log('✅ Available slots found:', availableSlotTimes);
-          setAvailableSlots(availableSlotTimes);
-        }
-      } else {
-        console.log('⚠️ API returned success: false, using default time slots');
-        setAvailableSlots(DEFAULT_TIME_SLOTS);
-      }
-    } catch (error) {
-      // Don't log error if request was aborted
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('❌ Error fetching available slots, using default time slots:', error);
-      }
-      // Fallback to default time slots when API fails
-      setAvailableSlots(DEFAULT_TIME_SLOTS);
-    } finally {
-      // Ensure minimum loading time
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-      
-      setTimeout(() => {
-        setLoadingSlots(false);
-        currentFetchRef.current = null;
-      }, remainingTime);
-    }
-  };
-
-  // Fetch available slots when date changes with debouncing
-  useEffect(() => {
-    if (formData.date) {
-      // Clear the selected time when date changes
-      setFormData(prev => ({ ...prev, time: '' }));
-      
-      // Debounce the API call to prevent rapid requests
-      const timeoutId = setTimeout(() => {
-        fetchAvailableSlots(formData.date);
-      }, 300); // 300ms debounce delay
-      
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    } else {
-      // When no date is selected, show default time slots
-      setAvailableSlots(DEFAULT_TIME_SLOTS);
-    }
-  }, [formData.date, formResetKey]);
-
-  // Ensure tomorrow's date is set as default on component mount
+  // Ensure tomorrow's date and default time are set on component mount
   useEffect(() => {
     if (!defaultDateSet.current) {
       const tomorrow = getTomorrowDate();
-      setFormData(prev => ({ ...prev, date: tomorrow }));
+      setFormData(prev => ({ 
+        ...prev, 
+        date: tomorrow,
+        time: '10:00 AM' // Set default time
+      }));
       defaultDateSet.current = true;
     }
-    
-    // Cleanup function to abort any ongoing requests when component unmounts
-    return () => {
-      if (currentFetchRef.current) {
-        currentFetchRef.current.abort();
-      }
-    };
   }, []); // Empty dependency array means this runs only once on mount
 
   // Validation functions
@@ -278,24 +96,7 @@ export default function BookSection() {
     return null;
   };
 
-  const validateDate = (date: string): string | null => {
-    if (!date) return 'Appointment date is required';
-    const selectedDate = new Date(date);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    
-    if (selectedDate < tomorrow) return 'Please select a date from tomorrow onwards';
-    
-    return null;
-  };
 
-  const validateTime = (time: string): string | null => {
-    if (!time) return 'Appointment time is required';
-    const slotsToCheck = availableSlots.length > 0 ? availableSlots : DEFAULT_TIME_SLOTS;
-    if (!slotsToCheck.includes(time)) return 'Please select a valid time slot';
-    return null;
-  };
 
   const validateForm = (): boolean => {
     const errors: typeof validationErrors = {};
@@ -308,12 +109,6 @@ export default function BookSection() {
     
     const phoneError = validatePhone(formData.phone);
     if (phoneError) errors.phone = phoneError;
-    
-    const dateError = validateDate(formData.date);
-    if (dateError) errors.date = dateError;
-    
-    const timeError = validateTime(formData.time);
-    if (timeError) errors.time = timeError;
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -368,15 +163,15 @@ export default function BookSection() {
 
       if (response.ok) {
         setSubmitStatus('success');
-        setSuccessMessage(`Appointment created successfully!!!`);
+        setSuccessMessage(`Message sent successfully!!!`);
         setValidationErrors({}); // Clear any validation errors
         
         // Reset form after a short delay
         setTimeout(() => {
-          resetFormAndFetchSlots();
+          resetForm();
         }, 2000);
       } else {
-        throw new Error(data.error || 'Failed to create appointment');
+        throw new Error(data.error || 'Failed to send message');
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
@@ -402,12 +197,12 @@ export default function BookSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Schedule Your
-            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent"> Consultation</span>
+            Get In
+            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent"> Touch</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Book your appointment with Dr. Ajay Krishna Murthy for expert 
-            oculoplastic care and personalized treatment.
+            Contact Dr. Ajay Krishna Murthy for expert 
+            oculoplastic care and personalized consultation.
           </p>
           <div className="mt-6 w-24 h-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full mx-auto"></div>
         </div>
@@ -425,7 +220,7 @@ export default function BookSection() {
                 </div>
                 
                 <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                  Appointment Booked Successfully! 🎉
+                  Message Sent Successfully! 🎉
                 </h3>
                 
                 <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
@@ -433,7 +228,7 @@ export default function BookSection() {
                     {successMessage}
                   </p>
                   <p className="text-green-700 text-sm">
-                    We have received your appointment request and will contact you shortly to confirm the details.
+                    We have received your message and will contact you shortly to discuss your consultation.
                   </p>
                 </div>
 
@@ -444,8 +239,8 @@ export default function BookSection() {
                     <h5 className="font-semibold text-amber-800 mb-2">What happens next?</h5>
                     <ul className="text-amber-700 text-sm space-y-1 text-left">
                       <li>• You will receive a confirmation email with all the details</li>
-                      <li>• Please arrive 15 minutes early for your appointment</li>
-                      <li>• Bring a valid ID and any relevant medical records</li>
+                      <li>• We will contact you to schedule a consultation</li>
+                      <li>• Please have your medical records ready for discussion</li>
                     </ul>
                   </div>
 
@@ -454,11 +249,11 @@ export default function BookSection() {
                       setSubmitStatus('idle');
                       setSuccessMessage('');
                       setValidationErrors({});
-                      resetFormAndFetchSlots();
+                      resetForm();
                     }}
                     className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200"
                   >
-                    Book Another Appointment
+                    Send Another Message
                   </button>
                 </div>
               </div>
@@ -551,91 +346,7 @@ export default function BookSection() {
                 )}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Date *
-                  </label>
-                  <div className="mb-2">
-                  </div>
-                  <div className="date-picker-custom">
-                    <input
-                      type="date"
-                      id="date"
-                      name="date"
-                      required
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      min={getTomorrowDate()}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
-                        validationErrors.date 
-                          ? 'border-red-300 focus:ring-red-500' 
-                          : 'border-gray-300 focus:ring-amber-500'
-                      }`}
-                    />
-                  </div>
-                  {validationErrors.date && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {validationErrors.date}
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Time *
-                  </label>
-                  <select
-                    id="time"
-                    name="time"
-                    required
-                    value={formData.time}
-                    onChange={handleInputChange}
-                    disabled={loadingSlots || !formData.date}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${
-                      validationErrors.time 
-                        ? 'border-red-300 focus:ring-red-500' 
-                        : 'border-gray-300 focus:ring-amber-500'
-                    } ${(loadingSlots || !formData.date) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <option value="">
-                      {!formData.date 
-                        ? 'Please select a date first' 
-                        : loadingSlots 
-                          ? 'Loading available times...' 
-                          : 'Select time'}
-                    </option>
-                    {!loadingSlots && formData.date && availableSlots.map((time, index) => (
-                      <option key={`${time}-${index}`} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  {loadingSlots && formData.date && (
-                    <p className="mt-1 text-sm text-amber-600 flex items-center">
-                      <div className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Checking available time slots...
-                    </p>
-                  )}
-                  {!loadingSlots && formData.date && availableSlots.length === 0 && (
-                    <p className="mt-1 text-sm text-gray-500 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Using default time slots. All times may be available.
-                    </p>
-                  )}
-                  {validationErrors.time && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {validationErrors.time}
-                    </p>
-                  )}
-                </div>
-              </div>
+
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
@@ -663,7 +374,7 @@ export default function BookSection() {
                     Processing...
                   </div>
                 ) : (
-                  'Book Appointment'
+                  'Send Message'
                 )}
               </button>
 
@@ -678,7 +389,7 @@ export default function BookSection() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h4 className="text-red-800 font-medium">Booking Failed</h4>
+                      <h4 className="text-red-800 font-medium">Message Failed</h4>
                       <p className="text-red-700 text-sm mt-1">{errorMessage}</p>
                       <p className="text-red-600 text-sm mt-2">
                         Please check your information and try again. If the problem persists, contact us directly.

@@ -73,6 +73,8 @@ export default function AdminDashboard() {
     searchTerm: ''
   });
   
+
+  
   // Notification state
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'info';
@@ -145,27 +147,8 @@ export default function AdminDashboard() {
     }, 5000);
   };
 
-  // Filter appointments based on current filters
-  const filteredAppointments = appointments.filter(appointment => {
-    // Date range filter
-    if (appointmentFilters.dateFrom && appointment.date < appointmentFilters.dateFrom) return false;
-    if (appointmentFilters.dateTo && appointment.date > appointmentFilters.dateTo) return false;
-    
-    // Status filter
-    if (appointmentFilters.status !== 'all' && appointment.status !== appointmentFilters.status) return false;
-    
-    // Search term filter
-    if (appointmentFilters.searchTerm) {
-      const searchLower = appointmentFilters.searchTerm.toLowerCase();
-      return (
-        appointment.name.toLowerCase().includes(searchLower) ||
-        appointment.email.toLowerCase().includes(searchLower) ||
-        appointment.phone.includes(appointmentFilters.searchTerm)
-      );
-    }
-    
-    return true;
-  });
+  // Server-side filtering is now handled by the API
+  // The appointments array contains the filtered results from the server
 
   // Clear all filters
   const clearFilters = () => {
@@ -555,7 +538,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchAppointments = useCallback(async (page = currentPage) => {
+  const fetchAppointments = useCallback(async (page = currentPage, filters = appointmentFilters) => {
     try {
       // Enhanced debugging
       console.log('🚀 AdminDashboard - fetchAppointments called');
@@ -563,6 +546,7 @@ export default function AdminDashboard() {
       console.log('👤 User state:', user);
       console.log('🔐 Is authenticated:', isAuthenticated);
       console.log('📄 Fetching page:', page, 'with', itemsPerPage, 'items per page');
+      console.log('🔍 Applied filters:', filters);
       
       const token = getAccessToken();
       console.log('🎫 Raw access token:', token);
@@ -582,10 +566,24 @@ export default function AdminDashboard() {
         return;
       }
       
-      // Add pagination parameters to the URL
+      // Add pagination and filter parameters to the URL
       const url = new URL(`${backendUrl}/api/appointments/`);
       url.searchParams.append('page', page.toString());
       url.searchParams.append('limit', itemsPerPage.toString());
+      
+      // Add filter parameters
+      if (filters.status !== 'all') {
+        url.searchParams.append('status', filters.status);
+      }
+      if (filters.dateFrom) {
+        url.searchParams.append('date_from', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        url.searchParams.append('date_to', filters.dateTo);
+      }
+      if (filters.searchTerm) {
+        url.searchParams.append('search', filters.searchTerm);
+      }
       
       const response = await fetch(url.toString(), {
         headers,
@@ -632,7 +630,7 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [backendUrl, logout, router, getAuthHeaders, user, isAuthenticated, getAccessToken, currentPage, itemsPerPage]);
+  }, [backendUrl, logout, router, getAuthHeaders, user, isAuthenticated, getAccessToken, currentPage, itemsPerPage, appointmentFilters]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -675,7 +673,12 @@ export default function AdminDashboard() {
     const initialFetch = async () => {
     if (!authLoading && isAuthenticated) {
       console.log('✅ Auth ready, fetching admin data...');
-        await fetchAppointments(1); // Always start from page 1
+        await fetchAppointments(1, {
+          dateFrom: '',
+          dateTo: '',
+          status: 'all',
+          searchTerm: ''
+        }); // Always start from page 1 with no filters
         await fetchStats();
     } else if (!authLoading && !isAuthenticated) {
       console.log('❌ Not authenticated, redirecting...');
@@ -686,6 +689,16 @@ export default function AdminDashboard() {
     initialFetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, router]);
+
+  // Handle filter changes and trigger server-side filtering
+  useEffect(() => {
+    // Skip the initial render to avoid double fetching
+    if (appointments.length > 0) {
+      // Reset to page 1 when filters change
+      setCurrentPage(1);
+      fetchAppointments(1, appointmentFilters);
+    }
+  }, [appointmentFilters, fetchAppointments]);
 
   const updateAppointmentStatus = async (appointmentId: number, status: string) => {
     setUpdatingStatus(appointmentId); // Set loading state for this specific appointment
@@ -705,7 +718,7 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       if (data.success) {
-        fetchAppointments(currentPage); // Refresh current page
+        fetchAppointments(currentPage, appointmentFilters); // Refresh current page with current filters
         fetchStats();
         showNotification('success', 'Appointment status updated successfully!');
       } else {
@@ -935,77 +948,110 @@ export default function AdminDashboard() {
           {activeTab === 'appointments' && (
             <>
         {/* Stats Cards */}
-        {stats && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                  <div className="bg-white rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-            </div>
-            </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{stats.total}</div>
-                    <div className="text-xs font-medium text-gray-600">Total</div>
-            </div>
-                  
-                  <div className="bg-white rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-            </div>
-                    </div>
-                    <div className="text-2xl font-bold text-yellow-600 mb-1">{stats.pending}</div>
-                    <div className="text-xs font-medium text-gray-600">Pending</div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                {stats && (
+                  <>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                  <div 
+                    className="bg-white rounded-xl p-3 shadow-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{stats.total}</div>
+                          <div className="text-xs font-medium text-gray-600">Total</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-green-600 mb-1">{stats.confirmed}</div>
-                    <div className="text-xs font-medium text-gray-600">Confirmed</div>
                   </div>
                   
-                  <div className="bg-white rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                  <div 
+                    className="bg-white rounded-xl p-3 shadow-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-yellow-600">{stats.pending}</div>
+                          <div className="text-xs font-medium text-gray-600">Pending</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-blue-600 mb-1">{stats.completed}</div>
-                    <div className="text-xs font-medium text-gray-600">Completed</div>
                   </div>
                   
-                  <div className="bg-white rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                  <div 
+                    className="bg-white rounded-xl p-3 shadow-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-green-600">{stats.confirmed}</div>
+                          <div className="text-xs font-medium text-gray-600">Confirmed</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-red-600 mb-1">{stats.cancelled}</div>
-                    <div className="text-xs font-medium text-gray-600">Cancelled</div>
-            </div>
-          </div>
-        )}
+                  </div>
+                  
+                  <div 
+                    className="bg-white rounded-xl p-3 shadow-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-blue-600">{stats.completed}</div>
+                          <div className="text-xs font-medium text-gray-600">Completed</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="bg-white rounded-xl p-3 shadow-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-red-600">{stats.cancelled}</div>
+                          <div className="text-xs font-medium text-gray-600">Cancelled</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                    </div>
+                  </>
+                )}
 
         {/* Appointments Table */}
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Recent Appointments</h2>
-                      <p className="text-gray-600 mt-1">Manage and track patient appointments</p>
+                      <h2 className="text-xl font-bold text-gray-900">Recent Appointments</h2>
+                      <p className="text-gray-600 mt-1 text-sm">Manage and track patient appointments</p>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
@@ -1013,15 +1059,15 @@ export default function AdminDashboard() {
                         <span className="text-sm text-gray-600">Live Updates</span>
                       </div>
                       <div className="text-sm text-gray-500">
-                        Showing {filteredAppointments.length} of {appointments.length} appointments
+                        Showing {appointments.length} of {totalAppointments} appointments
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Filters Section */}
-                <div className="px-8 py-4 bg-gray-50 border-b border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Search */}
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
@@ -1056,21 +1102,7 @@ export default function AdminDashboard() {
                       />
                     </div>
 
-                    {/* Status Filter */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                      <select
-                        value={appointmentFilters.status}
-                        onChange={(e) => setAppointmentFilters(prev => ({ ...prev, status: e.target.value }))}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      >
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </div>
+
 
                     {/* Clear Filters */}
                     <div className="flex items-end">
@@ -1105,7 +1137,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredAppointments.length === 0 ? (
+                      {appointments.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-8 py-16 text-center">
                             <div className="flex flex-col items-center justify-center">
@@ -1127,7 +1159,7 @@ export default function AdminDashboard() {
                           </td>
                         </tr>
                       ) : (
-                        filteredAppointments.map((appointment) => (
+                        appointments.map((appointment) => (
                         <tr key={appointment.id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">

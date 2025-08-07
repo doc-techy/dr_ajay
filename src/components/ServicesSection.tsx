@@ -110,9 +110,9 @@ export default function ServicesSection() {
                   </div> */}
                 </div>
                 
-                {/* Book Now Button */}
+                {/* Contact Us Button */}
                 <button className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 group-hover:shadow-md">
-                  Book Now
+                  Contact Us
                 </button>
               </div>
               
