@@ -76,9 +76,9 @@ export default function EducationSection() {
 
   const affiliationsData = [
     {
-      acronym: "ALOS",
-      fullName: "Association for Lachrymal and Orbital Surgery",
-      description: "Leading organization for specialists in lachrymal and orbital surgery with focus on advanced techniques",
+      acronym: "AIOS",
+      fullName: "All India Ophthalmological Society",
+      description: "The All India Ophthalmological Society (AIOS) is dedicated to protecting sight, empowering lives, and advancing ophthalmic education and research across India.",
       icon: "👁️",
       highlight: "Active Member",
       gradient: "from-blue-500 to-cyan-500",
