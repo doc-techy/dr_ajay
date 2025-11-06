@@ -97,7 +97,7 @@ export default function SpecializationsSection() {
   };
 
   return (
-    <div className="relative py-20 overflow-hidden scroll-margin-header" id="specializations">
+    <div className="relative pt-12 pb-20 md:py-20 overflow-hidden scroll-margin-header" id="specializations">
       {/* Consistent Fading Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
@@ -153,8 +153,8 @@ export default function SpecializationsSection() {
           </button>
 
           {/* Gradient Fade Effects */}
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
+          <div className="hidden md:block absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none"></div>
+          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none"></div>
 
           {/* Scrollable Cards Container */}
           <div 

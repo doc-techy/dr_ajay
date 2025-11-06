@@ -259,7 +259,7 @@ export default function EducationSection() {
               <div className="w-12 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {affiliationsData.map((affiliation, index) => (
                 <div
                   key={index}
@@ -285,7 +285,7 @@ export default function EducationSection() {
                       <h5 className="text-xs font-semibold text-gray-700 mb-2 leading-tight">
                         {affiliation.fullName}
                       </h5>
-                      <p className="text-gray-600 text-xs leading-relaxed">
+                      <p className="hidden text-gray-600 text-xs leading-relaxed md:block">
                         {affiliation.description}
                       </p>
                     </div>

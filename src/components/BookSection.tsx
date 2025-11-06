@@ -183,7 +183,7 @@ export default function BookSection() {
   };
 
   return (
-    <section className="relative py-16 scroll-margin-header" id="book">
+    <section className="relative pt-10 md:pt-16 pb-16 scroll-margin-header" id="book">
 
       {/* Consistent Fading Background */}
       <div className="absolute inset-0">

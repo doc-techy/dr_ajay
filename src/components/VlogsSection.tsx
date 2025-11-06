@@ -19,6 +19,7 @@ export default function VlogsSection() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedVideo, setSelectedVideo] = useState<Vlog | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const categories = [
@@ -138,6 +139,8 @@ export default function VlogsSection() {
     : vlogs.filter(vlog => vlog.category === activeCategory);
 
   const featuredVlog = vlogs.find(vlog => vlog.featured);
+  const mobileSlides = Math.ceil(filteredVlogs.length / 2);
+  const mobileVisibleVlogs = filteredVlogs.slice(currentSlide * 2, currentSlide * 2 + 2);
 
   // Function to handle video click
   const handleVideoClick = (vlog: Vlog) => {
@@ -166,6 +169,18 @@ export default function VlogsSection() {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isVideoModalOpen]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setCurrentSlide(0);
+    }
+  }, [activeCategory]);
+
+  useEffect(() => {
+    if (currentSlide > mobileSlides - 1) {
+      setCurrentSlide(Math.max(mobileSlides - 1, 0));
+    }
+  }, [mobileSlides, currentSlide]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -258,24 +273,135 @@ export default function VlogsSection() {
         )}
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                activeCategory === category.id
-                  ? 'bg-amber-700 text-white shadow-md'
-                  : 'bg-white text-gray-600 hover:bg-amber-50 hover:text-amber-700 shadow-sm'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
+        <div className="mb-12 -mx-4 md:mx-0">
+          <div
+            className="flex gap-4 overflow-x-auto md:overflow-visible px-4 md:px-0 flex-nowrap md:flex-wrap justify-start md:justify-center"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex-shrink-0 ${
+                  activeCategory === category.id
+                    ? 'bg-amber-700 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-amber-50 hover:text-amber-700 shadow-sm'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Video Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Video Grid - Mobile Carousel */}
+        <div className="md:hidden mb-10">
+          <div className="space-y-6">
+            {mobileVisibleVlogs.map((vlog) => (
+              <div
+                key={vlog.id}
+                className="group bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 overflow-hidden"
+              >
+                <div className="relative mb-6">
+                  <div
+                    className="relative rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                    onClick={() => handleVideoClick(vlog)}
+                  >
+                    <Image
+                      src={vlog.thumbnail}
+                      alt={vlog.title}
+                      width={400}
+                      height={160}
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-lg">
+                        <svg className="w-4 h-4 text-amber-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-3 right-3 bg-black/60 text-white px-2 py-1 rounded text-xs">
+                      {vlog.duration}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        vlog.category === 'educational'
+                          ? 'bg-amber-100 text-amber-700'
+                          : vlog.category === 'procedures'
+                          ? 'bg-purple-100 text-purple-700'
+                          : vlog.category === 'testimonials'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-orange-100 text-orange-700'
+                      }`}
+                    >
+                      {categories.find((cat) => cat.id === vlog.category)?.name}
+                    </span>
+                  </div>
+
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors">
+                    {vlog.title}
+                  </h4>
+
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+                    {vlog.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {mobileSlides > 1 && (
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                onClick={() => setCurrentSlide((prev) => Math.max(prev - 1, 0))}
+                className={`md:hidden inline-flex items-center justify-center w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300 ${
+                  currentSlide === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-50 hover:text-amber-700'
+                }`}
+                disabled={currentSlide === 0}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div className="flex items-center gap-2">
+                {Array.from({ length: mobileSlides }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      currentSlide === index ? 'w-6 bg-amber-600' : 'w-2 bg-gray-300'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  ></button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentSlide((prev) => Math.min(prev + 1, mobileSlides - 1))}
+                className={`md:hidden inline-flex items-center justify-center w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300 ${
+                  currentSlide === mobileSlides - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-amber-50 hover:text-amber-700'
+                }`}
+                disabled={currentSlide === mobileSlides - 1}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Video Grid - Desktop */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredVlogs.map((vlog) => (
             <div
               key={vlog.id}
