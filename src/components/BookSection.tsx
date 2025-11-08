@@ -150,8 +150,14 @@ export default function BookSection() {
     setSuccessMessage('');
     setErrorMessage('');
 
+    const normalizedBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+      ? process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/$/, '')
+      : '';
+    const endpoint = '/api/ajay/appointments/';
+    const requestUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${endpoint}` : endpoint;
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'}/api/appointments/`, {
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
