@@ -165,13 +165,20 @@ export default function BookSection() {
       ? endpoint
       : `${backendBase}${endpoint}`;
 
+    const payload = {
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      note: formData.message.trim(),
+    };
+
     try {
       const response = await fetch(requestUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
