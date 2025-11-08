@@ -150,11 +150,20 @@ export default function BookSection() {
     setSuccessMessage('');
     setErrorMessage('');
 
-    const normalizedBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+    const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
       ? process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/$/, '')
       : '';
     const endpoint = '/api/ajay/appointments/';
-    const requestUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${endpoint}` : endpoint;
+
+    const shouldUseRelativeEndpoint =
+      !backendBase ||
+      (typeof window !== 'undefined' &&
+        window.location.protocol === 'https:' &&
+        backendBase.startsWith('http://'));
+
+    const requestUrl = shouldUseRelativeEndpoint
+      ? endpoint
+      : `${backendBase}${endpoint}`;
 
     try {
       const response = await fetch(requestUrl, {
