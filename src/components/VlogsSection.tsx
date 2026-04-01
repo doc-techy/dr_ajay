@@ -16,14 +16,12 @@ interface Vlog {
 }
 
 export default function VlogsSection() {
-  const [activeCategory, setActiveCategory] = useState('all');
   const [selectedVideo, setSelectedVideo] = useState<Vlog | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const categories = [
-    { id: 'all', name: 'All Videos' },
     { id: 'educational', name: 'Educational' },
     { id: 'procedures', name: 'Procedures' },
     { id: 'testimonials', name: 'Patient Stories' },
@@ -134,13 +132,14 @@ export default function VlogsSection() {
     }
   ];
 
-  const filteredVlogs = activeCategory === 'all' 
-    ? vlogs 
-    : vlogs.filter(vlog => vlog.category === activeCategory);
+  const orderedVlogs = [...vlogs].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  });
 
-  const featuredVlog = vlogs.find(vlog => vlog.featured);
-  const mobileSlides = Math.ceil(filteredVlogs.length / 2);
-  const mobileVisibleVlogs = filteredVlogs.slice(currentSlide * 2, currentSlide * 2 + 2);
+  const mobileSlides = Math.ceil(orderedVlogs.length / 2);
+  const mobileVisibleVlogs = orderedVlogs.slice(currentSlide * 2, currentSlide * 2 + 2);
 
   // Function to handle video click
   const handleVideoClick = (vlog: Vlog) => {
@@ -169,12 +168,6 @@ export default function VlogsSection() {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isVideoModalOpen]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setCurrentSlide(0);
-    }
-  }, [activeCategory]);
 
   useEffect(() => {
     if (currentSlide > mobileSlides - 1) {
@@ -217,81 +210,6 @@ export default function VlogsSection() {
             our comprehensive video library by Dr. Ajay Krishna Murthy.
           </p>
           <div className="mt-6 w-24 h-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full mx-auto"></div>
-        </div>
-
-        {/* Featured Video */}
-        {featuredVlog && (
-          <div className="mb-16">
-            <h3 className="text-2xl font-bold text-gray-900 mb-8">Featured Video</h3>
-            <div className="bg-white rounded-3xl p-8 shadow-2xl border border-gray-100">
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
-                <div className="relative">
-                  <div 
-                    className="relative rounded-2xl overflow-hidden shadow-lg group cursor-pointer"
-                    onClick={() => handleVideoClick(featuredVlog)}
-                  >
-                    <Image
-                      src={featuredVlog.thumbnail}
-                      alt={featuredVlog.title}
-                      width={600}
-                      height={256}
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors duration-300"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-lg">
-                        <svg className="w-6 h-6 text-amber-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-4 right-4 bg-black/60 text-white px-2 py-1 rounded text-sm">
-                      {featuredVlog.duration}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="inline-flex items-center bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-medium mb-4">
-                    Featured
-                  </div>
-                  <h4 className="text-2xl font-bold text-gray-900 mb-4">{featuredVlog.title}</h4>
-                  <p className="text-gray-600 mb-6">{featuredVlog.description}</p>
-                  {/* <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
-                    <span>{new Date(featuredVlog.uploadDate).toLocaleDateString()}</span>
-                  </div> */}
-                  <button 
-                    onClick={() => handleVideoClick(featuredVlog)}
-                    className="bg-amber-700 hover:bg-amber-800 text-white font-medium py-3 px-8 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-105"
-                  >
-                    Watch Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Category Filter */}
-        <div className="mb-12 -mx-4 md:mx-0">
-          <div
-            className="flex gap-4 overflow-x-auto md:overflow-visible px-4 md:px-0 flex-nowrap md:flex-wrap justify-start md:justify-center"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex-shrink-0 ${
-                  activeCategory === category.id
-                    ? 'bg-amber-700 text-white shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-amber-50 hover:text-amber-700 shadow-sm'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Video Grid - Mobile Carousel */}
@@ -402,7 +320,7 @@ export default function VlogsSection() {
 
         {/* Video Grid - Desktop */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredVlogs.map((vlog) => (
+          {orderedVlogs.map((vlog) => (
             <div
               key={vlog.id}
               className="group bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 overflow-hidden"
