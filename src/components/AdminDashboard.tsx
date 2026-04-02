@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -138,14 +138,15 @@ export default function AdminDashboard() {
   const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
-  // Show notification helper
-  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
-    setNotification({ type, message, show: true });
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-    }, 5000);
-  };
+  const showNotification = useCallback(
+    (type: 'success' | 'error' | 'info', message: string) => {
+      setNotification({ type, message, show: true });
+      setTimeout(() => {
+        setNotification((prev) => ({ ...prev, show: false }));
+      }, 5000);
+    },
+    []
+  );
 
   // Server-side filtering is now handled by the API
   // The appointments array contains the filtered results from the server
@@ -261,7 +262,7 @@ export default function AdminDashboard() {
     } finally {
       setLoadingAvailability(false);
     }
-  }, [backendUrl, getAuthHeaders, logout, router]);
+  }, [backendUrl, getAuthHeaders, logout, router, showNotification]);
 
   const createRecurringAvailability = async () => {
     if (recurringForm.days.length === 0) {
@@ -690,14 +691,15 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, router]);
 
-  // Handle filter changes and trigger server-side filtering
+  const filterChangeEffectDidMount = useRef(false);
+  // Handle filter changes and trigger server-side filtering (skip first run — initial fetch handles load)
   useEffect(() => {
-    // Skip the initial render to avoid double fetching
-    if (appointments.length > 0) {
-      // Reset to page 1 when filters change
-      setCurrentPage(1);
-      fetchAppointments(1, appointmentFilters);
+    if (!filterChangeEffectDidMount.current) {
+      filterChangeEffectDidMount.current = true;
+      return;
     }
+    setCurrentPage(1);
+    fetchAppointments(1, appointmentFilters);
   }, [appointmentFilters, fetchAppointments]);
 
   const updateAppointmentStatus = async (appointmentId: number, status: string) => {

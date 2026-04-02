@@ -169,7 +169,7 @@ export default function BookSection() {
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       email: formData.email.trim(),
-      note: formData.message.trim(),
+      note: (formData.message ?? '').trim(),
     };
 
     try {
